@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Lunar Cycle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Josefin+Sans:wght@100;200;300;400&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #191919;
+    color: #e8dfc8;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  .star { position:absolute; background:white; border-radius:50%; animation: twinkle var(--d) ease-in-out infinite; animation-delay:var(--delay); }
+  @keyframes twinkle { 0%,100%{opacity:var(--op)} 50%{opacity:calc(var(--op)*0.15)} }
+  .widget { position:relative; z-index:1; width:100%; max-width:320px; }
+  .widget-title {
+    font-size: 9px;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: #6b6585;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .widget-title::before { content:'◐'; font-size:11px; color:#8b7fd4; }
+  .widget-title::after { content:''; flex:1; height:1px; background:rgba(139,127,212,0.15); }
+
+  /* Phase row */
+  .phases-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    gap: 4px;
+  }
+  .phase-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+    flex: 1;
+  }
+  .phase-item.current { opacity: 1; }
+  .phase-item.adjacent { opacity: 0.6; }
+  .phase-moon { width: 28px; height: 28px; }
+  .phase-label {
+    font-size: 7px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6b6585;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .phase-item.current .phase-label { color: #c8bfff; }
+
+  /* Current phase display */
+  .current-display {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    background: rgba(139,127,212,0.06);
+    border: 1px solid rgba(139,127,212,0.12);
+    border-radius: 10px;
+  }
+  .big-moon { flex-shrink:0; }
+  .current-info { flex:1; }
+  .current-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 300;
+    color: #e8dfc8;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+  }
+  .current-day {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #6b6585;
+    margin-top: 4px;
+  }
+  .current-next {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: #8b7fd4;
+    margin-top: 6px;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .progress-label { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:#6b6585; min-width:80px; }
+  .progress-track { flex:1; height:2px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:2px; background: linear-gradient(90deg, #8b7fd4, #c9a84c); }
+  .progress-pct { font-size:9px; color:#6b6585; min-width:28px; text-align:right; letter-spacing:0.1em; }
+
+  /* Dates row */
+  .dates-row {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .date-item { text-align:center; }
+  .date-label { font-size:8px; letter-spacing:0.25em; text-transform:uppercase; color:#6b6585; display:block; margin-bottom:3px; }
+  .date-val { font-size:11px; color:#a09ab8; letter-spacing:0.1em; }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-title">Lunar Cycle</div>
+
+  <div class="phases-row" id="phasesRow"></div>
+
+  <div class="current-display">
+    <div class="big-moon">
+      <svg id="bigMoonSvg" width="52" height="52" viewBox="0 0 52 52"></svg>
+    </div>
+    <div class="current-info">
+      <div class="current-name" id="currentName"></div>
+      <div class="current-day" id="currentDay"></div>
+      <div class="current-next" id="currentNext"></div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <span class="progress-label">Cycle Progress</span>
+    <div class="progress-track"><div class="progress-fill" id="cycleBar"></div></div>
+    <span class="progress-pct" id="cyclePct"></span>
+  </div>
+
+  <div class="dates-row">
+    <div class="date-item">
+      <span class="date-label">Last New Moon</span>
+      <span class="date-val" id="lastNew"></span>
+    </div>
+    <div class="date-item">
+      <span class="date-label">Full Moon</span>
+      <span class="date-val" id="nextFull"></span>
+    </div>
+    <div class="date-item">
+      <span class="date-label">Next New Moon</span>
+      <span class="date-val" id="nextNew"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// Starfield
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 90; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 1.6 + 0.3;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.15+Math.random()*0.45};`;
+  starsEl.appendChild(s);
+}
+
+const KNOWN_NEW_MOON = new Date(Date.UTC(2025, 0, 29, 12, 36, 0));
+const SYNODIC = 29.53058867;
+const MS_PER_DAY = 86400000;
+
+const PHASES = [
+  { name:'New Moon',        emoji:'🌑', short:'New',      maxDay:1.85  },
+  { name:'Waxing Crescent', emoji:'🌒', short:'Crescent', maxDay:7.38  },
+  { name:'First Quarter',   emoji:'🌓', short:'Quarter',  maxDay:9.22  },
+  { name:'Waxing Gibbous',  emoji:'🌔', short:'Gibbous',  maxDay:14.77 },
+  { name:'Full Moon',       emoji:'🌕', short:'Full',     maxDay:16.61 },
+  { name:'Waning Gibbous',  emoji:'🌖', short:'Gibbous',  maxDay:22.15 },
+  { name:'Last Quarter',    emoji:'🌗', short:'Quarter',  maxDay:23.99 },
+  { name:'Waning Crescent', emoji:'🌘', short:'Crescent', maxDay:29.53 },
+];
+
+function getLunar(date) {
+  const daysSince = (date - KNOWN_NEW_MOON) / MS_PER_DAY;
+  let dayInCycle = ((daysSince % SYNODIC) + SYNODIC) % SYNODIC;
+  let phaseIdx = PHASES.findIndex(p => dayInCycle < p.maxDay);
+  if (phaseIdx < 0) phaseIdx = 0;
+  return { phase: PHASES[phaseIdx], phaseIdx, dayInCycle, pct: dayInCycle / SYNODIC };
+}
+
+function addDays(date, days) {
+  return new Date(date.getTime() + days * MS_PER_DAY);
+}
+
+function fmtDate(d) {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+// Draw SVG moon (illuminated fraction based on age)
+function drawMoon(svg, dayInCycle, size) {
+  svg.innerHTML = '';
+  const r = size / 2 - 1;
+  const cx = size / 2, cy = size / 2;
+  const isWaxing = dayInCycle < SYNODIC / 2;
+  // illuminated fraction
+  const fraction = 0.5 * (1 - Math.cos((dayInCycle / SYNODIC) * 2 * Math.PI));
+  const darkness = '#191919';
+  const light = '#e8dfc8';
+  const glow = '#c9a84c';
+
+  // glow
+  const glowEl = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  glowEl.setAttribute('cx', cx); glowEl.setAttribute('cy', cy);
+  glowEl.setAttribute('r', r + 4);
+  glowEl.setAttribute('fill', fraction > 0.85 ? 'rgba(201,168,76,0.18)' : 'rgba(139,127,212,0.1)');
+  svg.appendChild(glowEl);
+
+  // base disk
+  const base = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  base.setAttribute('cx', cx); base.setAttribute('cy', cy);
+  base.setAttribute('r', r);
+  base.setAttribute('fill', fraction < 0.05 ? '#2a2a2a' : light);
+  svg.appendChild(base);
+
+  // shadow overlay using clip path technique
+  if (fraction > 0.02 && fraction < 0.98) {
+    const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+    const clipId = 'mc' + Math.round(Math.random()*10000);
+    const clip = document.createElementNS('http://www.w3.org/2000/svg','clipPath');
+    clip.setAttribute('id', clipId);
+    const clipCirc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    clipCirc.setAttribute('cx', cx); clipCirc.setAttribute('cy', cy); clipCirc.setAttribute('r', r);
+    clip.appendChild(clipCirc);
+    defs.appendChild(clip);
+    svg.appendChild(defs);
+
+    // The elliptical shadow
+    const shadow = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    const rx = r * Math.abs(1 - 2 * fraction);
+    shadow.setAttribute('cx', cx); shadow.setAttribute('cy', cy);
+    shadow.setAttribute('rx', rx < 0.5 ? 0.5 : rx);
+    shadow.setAttribute('ry', r);
+    shadow.setAttribute('fill', darkness);
+    shadow.setAttribute('clip-path', `url(#${clipId})`);
+    // Position: waxing = shadow on left, waning = shadow on right
+    if (isWaxing) {
+      shadow.setAttribute('cx', fraction < 0.5 ? cx - (r - rx) : cx + (r - rx));
+    } else {
+      shadow.setAttribute('cx', fraction > 0.5 ? cx + (r - rx) : cx - (r - rx));
+    }
+    svg.appendChild(shadow);
+  }
+}
+
+function render() {
+  const now = new Date();
+  const lunar = getLunar(now);
+  const { phase, phaseIdx, dayInCycle, pct } = lunar;
+
+  // Big moon
+  const bigSvg = document.getElementById('bigMoonSvg');
+  drawMoon(bigSvg, dayInCycle, 52);
+
+  // Current info
+  document.getElementById('currentName').textContent = phase.name;
+  document.getElementById('currentDay').textContent = `Day ${Math.floor(dayInCycle) + 1} of 29`;
+
+  // Days to next full / new
+  const daysToFull = dayInCycle < 14.77
+    ? 14.77 - dayInCycle
+    : SYNODIC - dayInCycle + 14.77;
+  const daysToNew = SYNODIC - dayInCycle;
+
+  if (phaseIdx < 4) {
+    document.getElementById('currentNext').textContent = `Full moon in ${Math.ceil(daysToFull)} days`;
+  } else if (phaseIdx === 4) {
+    document.getElementById('currentNext').textContent = `New moon in ${Math.ceil(daysToNew)} days`;
+  } else {
+    document.getElementById('currentNext').textContent = `New moon in ${Math.ceil(daysToNew)} days`;
+  }
+
+  // Progress bar
+  document.getElementById('cycleBar').style.width = (pct * 100).toFixed(1) + '%';
+  document.getElementById('cyclePct').textContent = Math.round(pct * 100) + '%';
+
+  // Dates
+  const lastNewDate = new Date(now.getTime() - dayInCycle * MS_PER_DAY);
+  const nextFullDate = addDays(now, daysToFull > 0 ? daysToFull : daysToFull + SYNODIC);
+  const nextNewDate  = addDays(now, daysToNew);
+  document.getElementById('lastNew').textContent  = fmtDate(lastNewDate);
+  document.getElementById('nextFull').textContent = fmtDate(nextFullDate);
+  document.getElementById('nextNew').textContent  = fmtDate(nextNewDate);
+
+  // Phase row
+  const row = document.getElementById('phasesRow');
+  row.innerHTML = '';
+  const phaseOrder = [0,1,2,3,4,5,6,7];
+  phaseOrder.forEach((pi, i) => {
+    const p = PHASES[pi];
+    const isCurrent = pi === phaseIdx;
+    const isAdj = Math.abs(pi - phaseIdx) === 1 || (phaseIdx === 0 && pi === 7) || (phaseIdx === 7 && pi === 0);
+    const item = document.createElement('div');
+    item.className = 'phase-item' + (isCurrent ? ' current' : '') + (isAdj ? ' adjacent' : '');
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','28'); svg.setAttribute('height','28');
+    svg.setAttribute('viewBox','0 0 28 28');
+    svg.classList.add('phase-moon');
+    const phaseDayApprox = [0,3.7,8.3,11,14.77,18.5,23,26.5];
+    drawMoon(svg, phaseDayApprox[pi], 28);
+    item.appendChild(svg);
+
+    const label = document.createElement('div');
+    label.className = 'phase-label';
+    label.textContent = p.short;
+    item.appendChild(label);
+    row.appendChild(item);
+  });
+}
+
+render();
+setInterval(render, 60000);
+</script>
+</body>
+</html>

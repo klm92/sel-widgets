@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Today's Energy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Josefin+Sans:wght@100;200;300;400&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #191919;
+    color: #e8dfc8;
+    font-family: 'Josefin Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: 24px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--d) ease-in-out infinite; animation-delay:var(--delay); }
+  @keyframes twinkle { 0%,100%{opacity:var(--op)} 50%{opacity:calc(var(--op)*0.15)} }
+
+  .widget { position:relative; z-index:1; }
+
+  .widget-title {
+    font-size: 9px;
+    letter-spacing: 0.45em;
+    text-transform: uppercase;
+    color: #6b6585;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .widget-title::before { content:'◎'; font-size:10px; color:#8b7fd4; }
+  .widget-title::after { content:''; flex:1; height:1px; background:rgba(139,127,212,0.15); }
+
+  /* Sliders */
+  .slider-row {
+    margin-bottom: 16px;
+  }
+  .slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .slider-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #6b6585;
+  }
+  .slider-val {
+    font-size: 18px;
+    font-weight: 100;
+    letter-spacing: 0.05em;
+    color: #e8dfc8;
+    line-height: 1;
+    font-family: 'Josefin Sans', sans-serif;
+  }
+  .slider-val span {
+    font-size: 10px;
+    color: #6b6585;
+    letter-spacing: 0.1em;
+  }
+
+  /* Custom slider track */
+  .track-wrap { position: relative; height: 20px; display:flex; align-items:center; }
+  .track {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+  }
+  .track-fill {
+    height: 100%;
+    border-radius: 3px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: width 0.1s;
+  }
+  .track-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    transition: left 0.1s;
+    box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  }
+  .track-thumb:active { cursor: grabbing; }
+
+  /* Mood tags */
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: #6b6585;
+    margin-bottom: 12px;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.04); }
+
+  .mood-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 20px;
+  }
+  .mood-tag {
+    padding: 4px 11px;
+    border-radius: 20px;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  /* Save button */
+  .save-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+  .last-saved {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: #6b6585;
+    text-transform: uppercase;
+  }
+  .save-btn {
+    background: rgba(139,127,212,0.15);
+    border: 1px solid rgba(139,127,212,0.25);
+    border-radius: 20px;
+    padding: 5px 14px;
+    color: #c8bfff;
+    font-family: 'Josefin Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .save-btn:hover { background: rgba(139,127,212,0.3); }
+  .save-btn.saved { background: rgba(90,180,160,0.15); border-color: rgba(90,180,160,0.3); color: #5ab4a0; }
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+
+<div class="widget">
+  <div class="widget-title">Today's Energy</div>
+
+  <div class="slider-row" id="rowEnergy">
+    <div class="slider-top">
+      <span class="slider-label">Energy</span>
+      <span class="slider-val" id="valEnergy">7<span>/10</span></span>
+    </div>
+    <div class="track-wrap">
+      <div class="track" id="trackEnergy">
+        <div class="track-fill" id="fillEnergy" style="background:linear-gradient(90deg,#8b7fd4,#c9a84c);"></div>
+        <div class="track-thumb" id="thumbEnergy" style="background:#c9a84c;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slider-row" id="rowFocus">
+    <div class="slider-top">
+      <span class="slider-label">Focus</span>
+      <span class="slider-val" id="valFocus">6<span>/10</span></span>
+    </div>
+    <div class="track-wrap">
+      <div class="track" id="trackFocus">
+        <div class="track-fill" id="fillFocus" style="background:linear-gradient(90deg,#8b7fd4,#5ab4a0);"></div>
+        <div class="track-thumb" id="thumbFocus" style="background:#5ab4a0;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slider-row" id="rowMood">
+    <div class="slider-top">
+      <span class="slider-label">Mood</span>
+      <span class="slider-val" id="valMood">8<span>/10</span></span>
+    </div>
+    <div class="track-wrap">
+      <div class="track" id="trackMood">
+        <div class="track-fill" id="fillMood" style="background:linear-gradient(90deg,#8b7fd4,#b07090);"></div>
+        <div class="track-thumb" id="thumbMood" style="background:#b07090;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">Feeling</div>
+
+  <div class="mood-grid" id="moodGrid"></div>
+
+  <div class="save-row">
+    <span class="last-saved" id="lastSaved">Not yet saved today</span>
+    <button class="save-btn" id="saveBtn" onclick="saveAll()">Save ✦</button>
+  </div>
+</div>
+
+<script>
+// Starfield
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 1.6 + 0.3;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.15+Math.random()*0.4};`;
+  starsEl.appendChild(s);
+}
+
+// Mood tags config
+const MOODS = [
+  { label:'Curious',   color:'#8b7fd4', bg:'rgba(139,127,212,0.12)' },
+  { label:'Creative',  color:'#c9a84c', bg:'rgba(201,168,76,0.1)'   },
+  { label:'Calm',      color:'#5ab4a0', bg:'rgba(90,180,160,0.1)'   },
+  { label:'Focused',   color:'#c8bfff', bg:'rgba(200,191,255,0.1)'  },
+  { label:'Tired',     color:'#c47a6a', bg:'rgba(196,122,106,0.1)'  },
+  { label:'Anxious',   color:'#b07090', bg:'rgba(176,112,144,0.1)'  },
+  { label:'Hopeful',   color:'#a0c878', bg:'rgba(160,200,120,0.1)'  },
+  { label:'Scattered', color:'#a09ab8', bg:'rgba(160,154,184,0.1)'  },
+  { label:'Grounded',  color:'#c9a84c', bg:'rgba(201,168,76,0.08)'  },
+  { label:'Restless',  color:'#c47a6a', bg:'rgba(196,122,106,0.08)' },
+  { label:'Inspired',  color:'#8b7fd4', bg:'rgba(139,127,212,0.15)' },
+  { label:'Melancholy',color:'#6b8aad', bg:'rgba(107,138,173,0.1)'  },
+];
+
+let selectedMoods = new Set();
+
+function renderMoods() {
+  const grid = document.getElementById('moodGrid');
+  grid.innerHTML = '';
+  MOODS.forEach(m => {
+    const tag = document.createElement('div');
+    tag.className = 'mood-tag';
+    tag.textContent = m.label;
+    const active = selectedMoods.has(m.label);
+    tag.style.color = m.color;
+    tag.style.borderColor = active ? m.color : m.color + '40';
+    tag.style.background = active ? m.bg.replace(/[\d.]+\)$/, '0.3)') : m.bg;
+    tag.style.boxShadow = active ? `0 0 8px ${m.color}30` : 'none';
+    tag.onclick = () => {
+      if (selectedMoods.has(m.label)) selectedMoods.delete(m.label);
+      else selectedMoods.add(m.label);
+      renderMoods();
+    };
+    grid.appendChild(tag);
+  });
+}
+
+// Sliders
+const sliders = [
+  { id: 'Energy', val: 7 },
+  { id: 'Focus',  val: 6 },
+  { id: 'Mood',   val: 8 },
+];
+
+function pct(v) { return ((v - 1) / 9) * 100; }
+
+function updateSliderUI(sid, v) {
+  v = Math.max(1, Math.min(10, Math.round(v)));
+  document.getElementById('val' + sid).innerHTML = `${v}<span>/10</span>`;
+  document.getElementById('fill' + sid).style.width = pct(v) + '%';
+  document.getElementById('thumb' + sid).style.left = pct(v) + '%';
+  const s = sliders.find(s => s.id === sid);
+  if (s) s.val = v;
+}
+
+function makeSliderDraggable(sid) {
+  const track = document.getElementById('track' + sid);
+  let dragging = false;
+
+  function getVal(e) {
+    const rect = track.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return Math.round(1 + ratio * 9);
+  }
+
+  track.addEventListener('mousedown', e => { dragging = true; updateSliderUI(sid, getVal(e)); });
+  track.addEventListener('touchstart', e => { dragging = true; updateSliderUI(sid, getVal(e)); }, { passive:true });
+  window.addEventListener('mousemove', e => { if (dragging) updateSliderUI(sid, getVal(e)); });
+  window.addEventListener('touchmove', e => { if (dragging) updateSliderUI(sid, getVal(e)); }, { passive:true });
+  window.addEventListener('mouseup',  () => { dragging = false; });
+  window.addEventListener('touchend', () => { dragging = false; });
+}
+
+sliders.forEach(s => {
+  updateSliderUI(s.id, s.val);
+  makeSliderDraggable(s.id);
+});
+
+// Save / load
+function todayKey() {
+  const d = new Date();
+  return `selenarium-energy-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function saveAll() {
+  const payload = {
+    energy: sliders.find(s=>s.id==='Energy').val,
+    focus:  sliders.find(s=>s.id==='Focus').val,
+    mood:   sliders.find(s=>s.id==='Mood').val,
+    moods:  [...selectedMoods],
+    savedAt: new Date().toISOString(),
+  };
+  try { localStorage.setItem(todayKey(), JSON.stringify(payload)); } catch(e) {}
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'Saved ✦';
+  btn.classList.add('saved');
+  document.getElementById('lastSaved').textContent = 'Saved · ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  setTimeout(() => { btn.textContent = 'Save ✦'; btn.classList.remove('saved'); }, 2000);
+}
+
+function loadToday() {
+  try {
+    const saved = localStorage.getItem(todayKey());
+    if (!saved) return;
+    const d = JSON.parse(saved);
+    updateSliderUI('Energy', d.energy);
+    updateSliderUI('Focus',  d.focus);
+    updateSliderUI('Mood',   d.mood);
+    selectedMoods = new Set(d.moods || []);
+    const t = new Date(d.savedAt);
+    document.getElementById('lastSaved').textContent = 'Last saved · ' + t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  } catch(e) {}
+}
+
+loadToday();
+renderMoods();
+</script>
+</body>
+</html>
