@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Season & Sky</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Josefin+Sans:wght@100;200;300;400&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#191919; color:#e8dfc8;
+    font-family:'Josefin Sans',sans-serif; font-weight:300;
+    min-height:100vh; padding:22px 20px;
+    position:relative; overflow:hidden;
+  }
+  .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  .star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--d) ease-in-out infinite;animation-delay:var(--delay);}
+  @keyframes twinkle{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.15)}}
+  .widget{position:relative;z-index:1;}
+
+  .widget-title{font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:#6b6585;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .widget-title::before{content:'✦';font-size:10px;color:#8b7fd4;}
+  .widget-title::after{content:'';flex:1;height:1px;background:rgba(139,127,212,.15);}
+
+  /* Weather hero */
+  .weather-hero{
+    display:flex; align-items:center; gap:16px;
+    padding:16px; margin-bottom:14px;
+    background:rgba(255,255,255,.02);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:12px;
+  }
+  .weather-icon-wrap{flex-shrink:0;}
+  .weather-icon{font-size:42px;line-height:1;display:block;text-align:center;}
+  .weather-right{flex:1;}
+  .weather-temp{
+    font-family:'Josefin Sans',sans-serif; font-size:38px;
+    font-weight:100; color:#e8dfc8; letter-spacing:-.01em; line-height:1;
+  }
+  .weather-temp sup{font-size:16px;vertical-align:super;color:#a09ab8;}
+  .weather-desc{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#6b6585;margin-top:4px;}
+  .weather-loc{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#4a4460;margin-top:3px;}
+
+  /* Detail row */
+  .weather-details{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
+  .detail-cell{
+    padding:8px 10px; text-align:center;
+    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.04); border-radius:8px;
+  }
+  .detail-label{font-size:8px;letter-spacing:.25em;text-transform:uppercase;color:#6b6585;display:block;margin-bottom:3px;}
+  .detail-val{font-size:12px;color:#a09ab8;letter-spacing:.08em;}
+
+  /* Sun arc */
+  .sun-arc-wrap{margin-bottom:14px;padding:10px 14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;}
+  .sun-arc-label{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#6b6585;margin-bottom:8px;}
+  .sun-arc-row{display:flex;align-items:center;gap:8px;}
+  .sun-time{font-size:9px;color:#6b6585;letter-spacing:.1em;min-width:36px;}
+  .sun-time.right{text-align:right;}
+  .arc-track{flex:1;position:relative;height:28px;}
+  .arc-svg{width:100%;height:28px;}
+
+  /* Zodiac + season */
+  .zod-season{display:flex;gap:8px;margin-bottom:14px;}
+  .zod-card{
+    flex:1; padding:10px 12px; text-align:center;
+    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.04); border-radius:10px;
+  }
+  .zod-glyph{font-size:22px;display:block;margin-bottom:4px;}
+  .zod-name{font-size:9px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:2px;}
+  .zod-dates{font-size:8px;color:#6b6585;letter-spacing:.1em;}
+
+  /* Forecast row */
+  .forecast{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
+  .fc-day{
+    padding:8px 4px; text-align:center;
+    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.04); border-radius:8px;
+  }
+  .fc-name{font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:#6b6585;display:block;margin-bottom:4px;}
+  .fc-icon{font-size:16px;display:block;margin-bottom:4px;}
+  .fc-hi{font-size:11px;color:#a09ab8;display:block;}
+  .fc-lo{font-size:9px;color:#4a4460;display:block;}
+
+  .update-note{font-size:8px;letter-spacing:.2em;color:#3a3a4a;text-transform:uppercase;text-align:center;margin-top:12px;}
+  .refresh-btn{background:none;border:none;color:#6b6585;cursor:pointer;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-top:6px;display:block;margin-left:auto;margin-right:auto;transition:color .2s;font-family:'Josefin Sans',sans-serif;}
+  .refresh-btn:hover{color:#c8bfff;}
+  .loading{font-size:10px;letter-spacing:.25em;color:#6b6585;text-transform:uppercase;text-align:center;padding:20px 0;}
+  .error-note{font-size:9px;color:#6b6585;letter-spacing:.2em;text-align:center;padding:8px 0;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-title">Season & Sky</div>
+  <div id="weatherContent"><div class="loading">Reading the sky...</div></div>
+</div>
+
+<script>
+// Stars
+const starsEl=document.getElementById('stars');
+for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.12+Math.random()*0.4};`;starsEl.appendChild(s);}
+
+// Salem MA coords
+const LAT=42.5195, LON=-70.8967;
+
+function zodiac(date){
+  const m=date.getMonth()+1,d=date.getDate();
+  const z=[
+    {s:'Aries',g:'♈',c:'#c47a6a',d:'Mar 21 – Apr 19',sel:(m==3&&d>=21)||(m==4&&d<=19)},
+    {s:'Taurus',g:'♉',c:'#c9a84c',d:'Apr 20 – May 20',sel:(m==4&&d>=20)||(m==5&&d<=20)},
+    {s:'Gemini',g:'♊',c:'#c8bfff',d:'May 21 – Jun 20',sel:(m==5&&d>=21)||(m==6&&d<=20)},
+    {s:'Cancer',g:'♋',c:'#7ab8d0',d:'Jun 21 – Jul 22',sel:(m==6&&d>=21)||(m==7&&d<=22)},
+    {s:'Leo',g:'♌',c:'#c9a84c',d:'Jul 23 – Aug 22',sel:(m==7&&d>=23)||(m==8&&d<=22)},
+    {s:'Virgo',g:'♍',c:'#a0c878',d:'Aug 23 – Sep 22',sel:(m==8&&d>=23)||(m==9&&d<=22)},
+    {s:'Libra',g:'♎',c:'#8b7fd4',d:'Sep 23 – Oct 22',sel:(m==9&&d>=23)||(m==10&&d<=22)},
+    {s:'Scorpio',g:'♏',c:'#c47a6a',d:'Oct 23 – Nov 21',sel:(m==10&&d>=23)||(m==11&&d<=21)},
+    {s:'Sagittarius',g:'♐',c:'#c9a84c',d:'Nov 22 – Dec 21',sel:(m==11&&d>=22)||(m==12&&d<=21)},
+    {s:'Capricorn',g:'♑',c:'#a09ab8',d:'Dec 22 – Jan 19',sel:(m==12&&d>=22)||(m==1&&d<=19)},
+    {s:'Aquarius',g:'♒',c:'#7ab8d0',d:'Jan 20 – Feb 18',sel:(m==1&&d>=20)||(m==2&&d<=18)},
+    {s:'Pisces',g:'♓',c:'#8b7fd4',d:'Feb 19 – Mar 20',sel:true},
+  ];
+  return z.find(x=>x.sel)||z[11];
+}
+
+function season(date){
+  const m=date.getMonth()+1,d=date.getDate();
+  if((m==3&&d>=20)||(m==4)||(m==5)||(m==6&&d<=20)) return{name:'Spring',icon:'🌸',color:'#a0c878'};
+  if((m==6&&d>=21)||(m==7)||(m==8)||(m==9&&d<=22)) return{name:'Summer',icon:'☀️',color:'#c9a84c'};
+  if((m==9&&d>=23)||(m==10)||(m==11)||(m==12&&d<=20)) return{name:'Autumn',icon:'🍂',color:'#c47a6a'};
+  return{name:'Winter',icon:'❄️',color:'#7ab8d0'};
+}
+
+function wmoIcon(code, isDay){
+  const map={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'🌨',80:'🌦',81:'🌧',82:'🌧',95:'⛈',96:'⛈',99:'⛈'};
+  if(!isDay&&code===0) return'🌙';
+  return map[code]||'🌡';
+}
+
+function wmoDesc(code){
+  const map={0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Foggy',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm',99:'Heavy thunderstorm'};
+  return map[code]||'Variable';
+}
+
+function fmtTime(iso){
+  const d=new Date(iso+'Z');
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'America/New_York'});
+}
+
+function drawSunArc(rise, set, now){
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 200 36');
+  svg.setAttribute('width','100%');svg.setAttribute('height','36');
+  // Arc path
+  const path=document.createElementNS(svgNS,'path');
+  path.setAttribute('d','M 10 30 Q 100 -10 190 30');
+  path.setAttribute('fill','none');
+  path.setAttribute('stroke','rgba(201,168,76,0.2)');
+  path.setAttribute('stroke-width','1.5');
+  path.setAttribute('stroke-dasharray','3 4');
+  svg.appendChild(path);
+  // Horizon
+  const line=document.createElementNS(svgNS,'line');
+  line.setAttribute('x1','0');line.setAttribute('y1','30');line.setAttribute('x2','200');line.setAttribute('y2','30');
+  line.setAttribute('stroke','rgba(255,255,255,0.06)');line.setAttribute('stroke-width','1');
+  svg.appendChild(line);
+  // Sun position
+  const riseMs=new Date(rise).getTime(), setMs=new Date(set).getTime(), nowMs=now.getTime();
+  let t=Math.max(0,Math.min(1,(nowMs-riseMs)/(setMs-riseMs)));
+  if(nowMs<riseMs||nowMs>setMs) t=nowMs<riseMs?0:1;
+  // Quadratic bezier point
+  const bx=10+t*(2*(1-t)*(100-10)+t*(190-10));
+  const by=30+t*(2*(1-t)*(-10-30)+t*(30-30))-(t*(1-t)*40);
+  const isDaytime=nowMs>=riseMs&&nowMs<=setMs;
+  if(isDaytime){
+    const glow=document.createElementNS(svgNS,'circle');
+    glow.setAttribute('cx',bx.toFixed(1));glow.setAttribute('cy',by.toFixed(1));
+    glow.setAttribute('r','7');glow.setAttribute('fill','rgba(201,168,76,0.15)');
+    svg.appendChild(glow);
+    const sun=document.createElementNS(svgNS,'circle');
+    sun.setAttribute('cx',bx.toFixed(1));sun.setAttribute('cy',by.toFixed(1));
+    sun.setAttribute('r','4');sun.setAttribute('fill','#c9a84c');
+    svg.appendChild(sun);
+  }
+  return svg;
+}
+
+async function fetchWeather(){
+  const content=document.getElementById('weatherContent');
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m,apparent_temperature,is_day&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=6`;
+    const resp=await fetch(url);
+    if(!resp.ok) throw new Error('API error');
+    const data=await resp.json();
+    const c=data.current, d=data.daily;
+    const now=new Date();
+    const zod=zodiac(now);
+    const sea=season(now);
+
+    const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    // Build forecast days (skip today index 0)
+    let forecastHTML='';
+    for(let i=1;i<=5;i++){
+      const dt=new Date(d.time[i]+'T12:00:00');
+      const dn=dayNames[dt.getDay()];
+      const icon=wmoIcon(d.weathercode[i],true);
+      forecastHTML+=`<div class="fc-day"><span class="fc-name">${dn}</span><span class="fc-icon">${icon}</span><span class="fc-hi">${Math.round(d.temperature_2m_max[i])}°</span><span class="fc-lo">${Math.round(d.temperature_2m_min[i])}°</span></div>`;
+    }
+
+    const riseStr=fmtTime(d.sunrise[0]);
+    const setStr=fmtTime(d.sunset[0]);
+
+    content.innerHTML=`
+      <div class="weather-hero">
+        <div class="weather-icon-wrap"><span class="weather-icon">${wmoIcon(c.weathercode,c.is_day)}</span></div>
+        <div class="weather-right">
+          <div class="weather-temp">${Math.round(c.temperature_2m)}<sup>°F</sup></div>
+          <div class="weather-desc">${wmoDesc(c.weathercode)}</div>
+          <div class="weather-loc">Salem, Massachusetts</div>
+        </div>
+      </div>
+      <div class="weather-details">
+        <div class="detail-cell"><span class="detail-label">Feels Like</span><span class="detail-val">${Math.round(c.apparent_temperature)}°</span></div>
+        <div class="detail-cell"><span class="detail-label">Humidity</span><span class="detail-val">${c.relativehumidity_2m}%</span></div>
+        <div class="detail-cell"><span class="detail-label">Wind</span><span class="detail-val">${Math.round(c.windspeed_10m)} mph</span></div>
+      </div>
+      <div class="sun-arc-wrap">
+        <div class="sun-arc-label">Daylight Arc · Salem</div>
+        <div class="sun-arc-row">
+          <span class="sun-time">${riseStr}</span>
+          <div class="arc-track" id="arcTrack"></div>
+          <span class="sun-time right">${setStr}</span>
+        </div>
+      </div>
+      <div class="zod-season">
+        <div class="zod-card">
+          <span class="zod-glyph" style="color:${zod.c}">${zod.g}</span>
+          <div class="zod-name" style="color:${zod.c}">${zod.s} Season</div>
+          <div class="zod-dates">${zod.d}</div>
+        </div>
+        <div class="zod-card">
+          <span class="zod-glyph">${sea.icon}</span>
+          <div class="zod-name" style="color:${sea.color}">${sea.name}</div>
+          <div class="zod-dates">Northern Hemisphere</div>
+        </div>
+      </div>
+      <div class="forecast">${forecastHTML}</div>
+      <div class="update-note" id="updateNote"></div>
+      <button class="refresh-btn" onclick="fetchWeather()">↻ Refresh</button>
+    `;
+
+    // Draw sun arc
+    const arcTrack=document.getElementById('arcTrack');
+    if(arcTrack){
+      const svg=drawSunArc(d.sunrise[0],d.sunset[0],now);
+      arcTrack.appendChild(svg);
+    }
+
+    document.getElementById('updateNote').textContent=`Updated ${now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})}`;
+
+  }catch(e){
+    content.innerHTML=`
+      <div class="weather-hero" style="flex-direction:column;text-align:center;gap:10px;">
+        <span style="font-size:36px;">🌫</span>
+        <div>
+          <div style="font-size:13px;color:#a09ab8;letter-spacing:.05em;">Weather unavailable</div>
+          <div class="error-note">Open-Meteo may be blocked in this embed.<br>Try refreshing or check your connection.</div>
+        </div>
+      </div>
+      <div class="zod-season" style="margin-top:14px;">
+        <div class="zod-card">
+          <span class="zod-glyph" style="color:${zodiac(new Date()).c}">${zodiac(new Date()).g}</span>
+          <div class="zod-name" style="color:${zodiac(new Date()).c}">${zodiac(new Date()).s} Season</div>
+          <div class="zod-dates">${zodiac(new Date()).d}</div>
+        </div>
+        <div class="zod-card">
+          <span class="zod-glyph">${season(new Date()).icon}</span>
+          <div class="zod-name" style="color:${season(new Date()).color}">${season(new Date()).name}</div>
+          <div class="zod-dates">Northern Hemisphere</div>
+        </div>
+      </div>
+      <button class="refresh-btn" onclick="fetchWeather()">↻ Try Again</button>`;
+  }
+}
+
+fetchWeather();
+// Refresh every 30 minutes
+setInterval(fetchWeather, 30*60*1000);
+</script>
+</body>
+</html>

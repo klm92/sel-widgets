@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Calendar</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Josefin+Sans:wght@100;200;300;400&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#191919; color:#e8dfc8;
+    font-family:'Josefin Sans',sans-serif; font-weight:300;
+    min-height:100vh; padding:22px 20px;
+    position:relative; overflow:hidden;
+  }
+  .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  .star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--d) ease-in-out infinite;animation-delay:var(--delay);}
+  @keyframes twinkle{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.15)}}
+  .widget{position:relative;z-index:1;}
+
+  .widget-title{font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:#6b6585;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .widget-title::before{content:'✦';font-size:10px;color:#8b7fd4;}
+  .widget-title::after{content:'';flex:1;height:1px;background:rgba(139,127,212,.15);}
+
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .cal-nav{background:none;border:none;color:#6b6585;font-size:14px;cursor:pointer;padding:4px 8px;transition:color .2s;line-height:1;}
+  .cal-nav:hover{color:#c8bfff;}
+  .cal-month-label{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;color:#e8dfc8;letter-spacing:.06em;}
+  .cal-year{font-size:10px;letter-spacing:.25em;color:#6b6585;}
+
+  .day-names{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px;}
+  .day-name{text-align:center;font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#6b6585;padding:3px 0;}
+
+  .day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+
+  .day-cell{
+    aspect-ratio:1; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; border-radius:6px; cursor:pointer;
+    border:1px solid transparent; transition:all .15s; position:relative;
+    font-size:11px; color:#a09ab8; gap:1px;
+  }
+  .day-cell:hover{background:rgba(139,127,212,.08);border-color:rgba(139,127,212,.2);}
+  .day-cell.today{background:rgba(139,127,212,.18);border-color:rgba(139,127,212,.4);color:#e8dfc8;}
+  .day-cell.today .day-num{color:#c8bfff;font-weight:400;}
+  .day-cell.empty{pointer-events:none;}
+  .day-cell.other-month .day-num{color:#3a3a4a;}
+  .day-cell.has-event .day-num{color:#e8dfc8;}
+  .day-cell.selected{background:rgba(201,168,76,.12);border-color:rgba(201,168,76,.35);}
+
+  .day-num{font-size:11px;line-height:1;}
+  .event-dots{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;max-width:24px;}
+  .event-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+
+  /* Lunar day markers */
+  .moon-marker{font-size:7px;line-height:1;opacity:0.6;}
+
+  /* Event panel */
+  .event-panel{
+    margin-top:14px; padding:12px 14px;
+    background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05);
+    border-radius:10px; min-height:60px;
+  }
+  .event-panel-date{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#8b7fd4;margin-bottom:8px;}
+  .event-list{display:flex;flex-direction:column;gap:6px;}
+  .event-item{display:flex;align-items:center;gap:8px;}
+  .event-icon{font-size:12px;flex-shrink:0;}
+  .event-text{font-size:11px;color:#a09ab8;letter-spacing:.05em;flex:1;}
+  .event-delete{background:none;border:none;color:#6b6585;cursor:pointer;font-size:12px;padding:0 2px;line-height:1;transition:color .15s;}
+  .event-delete:hover{color:#c47a6a;}
+  .no-events{font-size:10px;color:#3a3a4a;letter-spacing:.2em;text-transform:uppercase;font-style:italic;}
+
+  /* Add event */
+  .add-wrap{display:flex;gap:6px;margin-top:10px;}
+  .add-input{
+    flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+    border-radius:6px;padding:6px 10px;color:#ddd8f0;
+    font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.05em;outline:none;
+  }
+  .add-input:focus{border-color:rgba(139,127,212,.3);}
+  .add-input::placeholder{color:#3a3a4a;}
+  .icon-pick{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+  .icon-opt{font-size:14px;cursor:pointer;padding:3px;border-radius:4px;border:1px solid transparent;transition:all .15s;opacity:.5;}
+  .icon-opt:hover,.icon-opt.sel{opacity:1;border-color:rgba(139,127,212,.3);background:rgba(139,127,212,.08);}
+  .add-btn{
+    background:rgba(139,127,212,.15);border:1px solid rgba(139,127,212,.25);
+    border-radius:6px;padding:6px 12px;color:#c8bfff;
+    font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:.2em;
+    cursor:pointer;transition:all .2s;align-self:flex-start;
+  }
+  .add-btn:hover{background:rgba(139,127,212,.3);}
+
+  /* Lunar strip */
+  .lunar-strip{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.04);}
+  .lunar-item{text-align:center;}
+  .lunar-item-label{font-size:8px;letter-spacing:.25em;text-transform:uppercase;color:#6b6585;display:block;margin-bottom:2px;}
+  .lunar-item-val{font-size:10px;color:#a09ab8;letter-spacing:.1em;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-title">Calendar</div>
+  <div class="cal-header">
+    <button class="cal-nav" id="prevBtn">‹</button>
+    <div style="text-align:center;">
+      <div class="cal-month-label" id="monthLabel"></div>
+      <div class="cal-year" id="yearLabel"></div>
+    </div>
+    <button class="cal-nav" id="nextBtn">›</button>
+  </div>
+  <div class="day-names">
+    <div class="day-name">Su</div><div class="day-name">Mo</div><div class="day-name">Tu</div>
+    <div class="day-name">We</div><div class="day-name">Th</div><div class="day-name">Fr</div>
+    <div class="day-name">Sa</div>
+  </div>
+  <div class="day-grid" id="dayGrid"></div>
+
+  <div class="event-panel">
+    <div class="event-panel-date" id="panelDate">Select a day</div>
+    <div class="event-list" id="eventList"></div>
+    <div class="no-events" id="noEvents" style="display:none;">No events</div>
+    <div id="addSection" style="display:none;">
+      <div class="icon-pick" id="iconPick"></div>
+      <div class="add-wrap">
+        <input class="add-input" id="addInput" placeholder="Add event...">
+        <button class="add-btn" onclick="addEvent()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lunar-strip">
+    <div class="lunar-item"><span class="lunar-item-label">Phase</span><span class="lunar-item-val" id="lPhase"></span></div>
+    <div class="lunar-item"><span class="lunar-item-label">Day</span><span class="lunar-item-val" id="lDay"></span></div>
+    <div class="lunar-item"><span class="lunar-item-label">Next Full</span><span class="lunar-item-val" id="lFull"></span></div>
+    <div class="lunar-item"><span class="lunar-item-label">Next New</span><span class="lunar-item-val" id="lNew"></span></div>
+  </div>
+</div>
+
+<script>
+// Stars
+const starsEl = document.getElementById('stars');
+for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.12+Math.random()*0.4};`;starsEl.appendChild(s);}
+
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const ICONS=['✦','🌙','⚕️','✍️','📚','🎵','🐾','🌿','💊','🔭','🏡','🎬','⭐','📝','🩺'];
+
+const J2000=new Date(Date.UTC(2000,0,1,12,0,0));
+const SYNODIC=29.53058867;
+function getLunar(date){
+  const d=(date-J2000)/86400000;
+  let dc=((d%SYNODIC)+SYNODIC)%SYNODIC;
+  const phases=['🌑 New','🌒 Crescent','🌓 Quarter','🌔 Gibbous','🌕 Full','🌖 Gibbous','🌗 Quarter','🌘 Crescent'];
+  const maxDays=[1.85,7.38,9.22,14.77,16.61,22.15,23.99,29.53];
+  const idx=maxDays.findIndex(m=>dc<m); 
+  const phaseName=phases[idx<0?0:idx];
+  const daysToFull=dc<14.77?14.77-dc:SYNODIC-dc+14.77;
+  const daysToNew=SYNODIC-dc;
+  return{name:phaseName,day:Math.floor(dc)+1,daysToFull:Math.ceil(daysToFull),daysToNew:Math.ceil(daysToNew)};
+}
+function fmtShort(d){return(d.getMonth()+1)+'/'+d.getDate();}
+
+// Moon phase emoji per day (for calendar dots)
+function moonEmojiForDay(date){
+  const d=(date-J2000)/86400000;
+  let dc=((d%SYNODIC)+SYNODIC)%SYNODIC;
+  if(dc<1.85) return'🌑';
+  if(dc<7.38) return'🌒';
+  if(dc<9.22) return'🌓';
+  if(dc<14.77) return'🌔';
+  if(dc<16.61) return'🌕';
+  if(dc<22.15) return'🌖';
+  if(dc<23.99) return'🌗';
+  return'🌘';
+}
+// Only show moon on new/full/quarter days
+function moonMarker(date){
+  const d=(date-J2000)/86400000;
+  let dc=((d%SYNODIC)+SYNODIC)%SYNODIC;
+  if(dc<1.5) return'🌑';
+  if(Math.abs(dc-7.38)<0.8) return'🌓';
+  if(Math.abs(dc-14.77)<0.8) return'🌕';
+  if(Math.abs(dc-22.15)<0.8) return'🌗';
+  return'';
+}
+
+// Event colors by icon category
+const DOT_COLORS={
+  '✦':'#8b7fd4','🌙':'#c8bfff','⚕️':'#5ab4a0','✍️':'#b07090',
+  '📚':'#c9a84c','🎵':'#8b7fd4','🐾':'#5ab4a0','🌿':'#a0c878',
+  '💊':'#5ab4a0','🔭':'#c9a84c','🏡':'#c47a6a','🎬':'#8b7fd4',
+  '⭐':'#c9a84c','📝':'#a09ab8','🩺':'#5ab4a0'
+};
+
+let viewYear, viewMonth, selectedKey=null, selectedDate=null, selIcon=ICONS[0];
+
+function storageKey(y,m,d){return`sel-cal-${y}-${m}-${d}`;}
+function loadEvents(y,m,d){try{const s=localStorage.getItem(storageKey(y,m,d));return s?JSON.parse(s):[];}catch(e){return[];}}
+function saveEvents(y,m,d,evts){try{localStorage.setItem(storageKey(y,m,d),JSON.stringify(evts));}catch(e){}}
+
+function hasEvents(y,m,d){
+  try{const s=localStorage.getItem(storageKey(y,m,d));return s&&JSON.parse(s).length>0;}catch(e){return false;}
+}
+
+function renderIconPick(){
+  const ip=document.getElementById('iconPick');ip.innerHTML='';
+  ICONS.forEach(ic=>{
+    const el=document.createElement('span');el.className='icon-opt'+(ic===selIcon?' sel':'');
+    el.textContent=ic;el.onclick=()=>{selIcon=ic;renderIconPick();};
+    ip.appendChild(el);
+  });
+}
+
+function renderCalendar(){
+  const now=new Date();
+  document.getElementById('monthLabel').textContent=MONTHS[viewMonth];
+  document.getElementById('yearLabel').textContent=viewYear;
+  const firstDay=new Date(viewYear,viewMonth,1).getDay();
+  const daysInMonth=new Date(viewYear,viewMonth+1,0).getDate();
+  const prevDays=new Date(viewYear,viewMonth,0).getDate();
+  const grid=document.getElementById('dayGrid');grid.innerHTML='';
+
+  // Prev month overflow
+  for(let i=0;i<firstDay;i++){
+    const dc=document.createElement('div');dc.className='day-cell other-month empty';
+    const dn=document.createElement('div');dn.className='day-num';dn.textContent=prevDays-firstDay+i+1;
+    dc.appendChild(dn);grid.appendChild(dc);
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    const cell=document.createElement('div');cell.className='day-cell';
+    const isToday=d===now.getDate()&&viewMonth===now.getMonth()&&viewYear===now.getFullYear();
+    if(isToday) cell.classList.add('today');
+    const k=storageKey(viewYear,viewMonth,d);
+    if(k===selectedKey) cell.classList.add('selected');
+
+    const evts=loadEvents(viewYear,viewMonth,d);
+    if(evts.length>0) cell.classList.add('has-event');
+
+    const dn=document.createElement('div');dn.className='day-num';dn.textContent=d;
+    cell.appendChild(dn);
+
+    // Moon marker
+    const dayDate=new Date(viewYear,viewMonth,d);
+    const mm=moonMarker(dayDate);
+    if(mm){const ml=document.createElement('div');ml.className='moon-marker';ml.textContent=mm;cell.appendChild(ml);}
+
+    // Event dots
+    if(evts.length>0){
+      const dots=document.createElement('div');dots.className='event-dots';
+      evts.slice(0,3).forEach(ev=>{
+        const dot=document.createElement('div');dot.className='event-dot';
+        dot.style.background=DOT_COLORS[ev.icon]||'#8b7fd4';dots.appendChild(dot);
+      });
+      cell.appendChild(dots);
+    }
+
+    cell.onclick=()=>selectDay(viewYear,viewMonth,d);
+    grid.appendChild(cell);
+  }
+
+  // Next month overflow
+  const total=firstDay+daysInMonth;
+  const remaining=(7-total%7)%7;
+  for(let i=1;i<=remaining;i++){
+    const dc=document.createElement('div');dc.className='day-cell other-month empty';
+    const dn=document.createElement('div');dn.className='day-num';dn.textContent=i;
+    dc.appendChild(dn);grid.appendChild(dc);
+  }
+
+  // Lunar strip
+  const lunar=getLunar(now);
+  document.getElementById('lPhase').textContent=lunar.name;
+  document.getElementById('lDay').textContent=`Day ${lunar.day}`;
+  const nf=new Date(now.getTime()+lunar.daysToFull*86400000);
+  const nn=new Date(now.getTime()+lunar.daysToNew*86400000);
+  document.getElementById('lFull').textContent=fmtShort(nf);
+  document.getElementById('lNew').textContent=fmtShort(nn);
+}
+
+function selectDay(y,m,d){
+  selectedKey=storageKey(y,m,d);
+  selectedDate={y,m,d};
+  renderCalendar();
+  renderEventPanel();
+}
+
+function renderEventPanel(){
+  if(!selectedDate){document.getElementById('panelDate').textContent='Select a day';return;}
+  const{y,m,d}=selectedDate;
+  document.getElementById('panelDate').textContent=`${MONTHS[m]} ${d}, ${y}`;
+  const evts=loadEvents(y,m,d);
+  const list=document.getElementById('eventList');list.innerHTML='';
+  const noEvts=document.getElementById('noEvents');
+  if(evts.length===0){noEvts.style.display='block';}else{
+    noEvts.style.display='none';
+    evts.forEach((ev,i)=>{
+      const item=document.createElement('div');item.className='event-item';
+      item.innerHTML=`<span class="event-icon">${ev.icon}</span><span class="event-text">${ev.text}</span><button class="event-delete" onclick="deleteEvent(${i})">×</button>`;
+      list.appendChild(item);
+    });
+  }
+  document.getElementById('addSection').style.display='block';
+  renderIconPick();
+}
+
+function addEvent(){
+  if(!selectedDate)return;
+  const input=document.getElementById('addInput');
+  const text=input.value.trim();if(!text)return;
+  const{y,m,d}=selectedDate;
+  const evts=loadEvents(y,m,d);
+  evts.push({icon:selIcon,text});
+  saveEvents(y,m,d,evts);
+  input.value='';
+  renderCalendar();renderEventPanel();
+}
+
+function deleteEvent(i){
+  if(!selectedDate)return;
+  const{y,m,d}=selectedDate;
+  const evts=loadEvents(y,m,d);
+  evts.splice(i,1);
+  saveEvents(y,m,d,evts);
+  renderCalendar();renderEventPanel();
+}
+
+document.getElementById('addInput').addEventListener('keydown',e=>{if(e.key==='Enter')addEvent();});
+document.getElementById('prevBtn').onclick=()=>{viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}renderCalendar();};
+document.getElementById('nextBtn').onclick=()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}renderCalendar();};
+
+// Init
+const now=new Date();viewYear=now.getFullYear();viewMonth=now.getMonth();
+// Auto-select today
+selectDay(viewYear,viewMonth,now.getDate());
+renderCalendar();
+</script>
+</body>
+</html>
