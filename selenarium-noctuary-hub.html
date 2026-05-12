@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Noctuary</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Josefin+Sans:wght@200;300;400&family=Nanum+Pen+Script&display=swap');
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:
+        radial-gradient(circle at top left,
+        rgba(120,100,170,0.08),
+        transparent 28%),
+
+        radial-gradient(circle at bottom right,
+        rgba(80,110,160,0.06),
+        transparent 32%),
+
+        #191919;
+
+    color:#e7dfd2;
+    font-family:'Josefin Sans',sans-serif;
+    min-height:100vh;
+    overflow-x:hidden;
+    padding:32px 24px 40px;
+    position:relative;
+}
+
+/* STARFIELD */
+
+.stars{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+}
+
+.star{
+    position:absolute;
+    border-radius:50%;
+    background:white;
+    animation:twinkle var(--dur) ease-in-out infinite;
+    animation-delay:var(--delay);
+    opacity:var(--op);
+}
+
+@keyframes twinkle{
+    0%,100%{opacity:var(--op);}
+    50%{opacity:0.08;}
+}
+
+/* MAIN SHELL */
+
+.dashboard{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:260px 1fr 250px;
+    gap:24px;
+}
+
+/* PANELS */
+
+.panel{
+    background:rgba(25,25,25,0.82);
+    border:1px solid rgba(220,220,255,0.055);
+    border-radius:22px;
+    backdrop-filter:blur(14px);
+    position:relative;
+    overflow:hidden;
+    box-shadow:
+        0 0 40px rgba(0,0,0,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.panel::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        rgba(220,220,255,0.18),
+        transparent
+    );
+}
+
+/* LEFT SIDEBAR */
+
+.sidebar{
+    padding:22px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.return-card{
+    padding:18px;
+    border-radius:18px;
+    background:linear-gradient(
+        180deg,
+        rgba(180,160,220,0.06),
+        rgba(255,255,255,0.015)
+    );
+    border:1px solid rgba(210,210,255,0.08);
+    transition:.3s ease;
+    cursor:pointer;
+    text-decoration:none;
+    display:block;
+}
+
+.return-card:hover{
+    transform:translateY(-2px);
+    border-color:rgba(220,220,255,0.16);
+    box-shadow:0 0 20px rgba(180,160,220,0.08);
+}
+
+.return-label{
+    font-size:10px;
+    letter-spacing:.35em;
+    text-transform:uppercase;
+    color:#746d91;
+    margin-bottom:8px;
+}
+
+.return-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:26px;
+    color:#ece4d8;
+    font-weight:300;
+}
+
+.small-widget{
+    padding:16px;
+    border-radius:18px;
+    background:rgba(30,30,30,0.72);
+    border:1px solid rgba(255,255,255,0.04);
+}
+
+.widget-title{
+    font-size:9px;
+    letter-spacing:.32em;
+    text-transform:uppercase;
+    color:#756f8f;
+    margin-bottom:12px;
+}
+
+.mood-ring{
+    width:92px;
+    height:92px;
+    border-radius:50%;
+    margin:0 auto 14px;
+    border:1px solid rgba(220,220,255,0.1);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+}
+
+.mood-ring::before{
+    content:'';
+    position:absolute;
+    inset:8px;
+    border-radius:50%;
+    border:1px solid rgba(220,220,255,0.08);
+}
+
+.moon{
+    font-size:30px;
+    filter:drop-shadow(0 0 8px rgba(255,255,200,0.2));
+}
+
+.mood-text{
+    text-align:center;
+    line-height:1.7;
+    font-size:13px;
+    color:#bdb5ca;
+}
+
+.quote{
+    font-family:'Cormorant Garamond',serif;
+    font-size:16px;
+    line-height:1.7;
+    font-style:italic;
+    color:#d0c7dc;
+}
+
+.quote-author{
+    margin-top:12px;
+    font-size:9px;
+    letter-spacing:.3em;
+    text-transform:uppercase;
+    color:#5f5a77;
+}
+
+/* MAIN */
+
+.main{
+    padding:28px;
+}
+
+.header{
+    margin-bottom:26px;
+}
+
+.overline{
+    font-size:10px;
+    letter-spacing:.42em;
+    text-transform:uppercase;
+    color:#6f6889;
+    margin-bottom:12px;
+}
+
+.title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:58px;
+    font-weight:300;
+    letter-spacing:.08em;
+    color:#f0e8dd;
+    line-height:1;
+}
+
+.subtitle{
+    margin-top:12px;
+    color:#b9b0c6;
+    line-height:1.9;
+    max-width:680px;
+    font-size:15px;
+}
+
+.divider{
+    margin:26px 0;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        rgba(220,220,255,0.16),
+        transparent
+    );
+}
+
+/* FEATURE CARD */
+
+.feature-card{
+    padding:24px;
+    border-radius:22px;
+    background:
+        radial-gradient(circle at top left,
+        rgba(180,160,220,0.08),
+        transparent 40%),
+        rgba(28,28,28,0.72);
+
+    border:1px solid rgba(220,220,255,0.07);
+    margin-bottom:28px;
+}
+
+.feature-label{
+    font-size:10px;
+    letter-spacing:.34em;
+    text-transform:uppercase;
+    color:#746d91;
+    margin-bottom:10px;
+}
+
+.feature-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:34px;
+    color:#f0e8dd;
+    margin-bottom:12px;
+}
+
+.feature-desc{
+    color:#bdb5ca;
+    line-height:1.9;
+    margin-bottom:20px;
+}
+
+.feature-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 18px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(220,220,255,0.08);
+    text-decoration:none;
+    color:#ddd4e8;
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    transition:.3s ease;
+}
+
+.feature-btn:hover{
+    background:rgba(180,160,220,0.08);
+    transform:translateY(-2px);
+}
+
+/* INDEX GRID */
+
+.section-heading{
+    margin-bottom:18px;
+}
+
+.section-title{
+    font-size:11px;
+    letter-spacing:.38em;
+    text-transform:uppercase;
+    color:#746d91;
+}
+
+.index-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+}
+
+.index-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:22px;
+    padding:22px;
+    background:
+        linear-gradient(
+            180deg,
+            rgba(34,34,34,0.74),
+            rgba(255,255,255,0.015)
+        );
+
+    border:1px solid rgba(220,220,255,0.06);
+    transition:.35s ease;
+    text-decoration:none;
+    min-height:160px;
+}
+
+.index-card:hover{
+    transform:translateY(-4px);
+    border-color:rgba(220,220,255,0.14);
+    box-shadow:0 0 30px rgba(180,160,220,0.08);
+}
+
+.card-icon{
+    font-size:22px;
+    margin-bottom:16px;
+}
+
+.card-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:28px;
+    color:#f0e8dd;
+    margin-bottom:10px;
+}
+
+.card-desc{
+    color:#b7afc3;
+    line-height:1.8;
+    font-size:14px;
+}
+
+/* RIGHT SIDEBAR */
+
+.rightbar{
+    padding:22px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.mini-entry{
+    padding:14px;
+    border-radius:16px;
+    background:rgba(30,30,30,0.72);
+    border:1px solid rgba(255,255,255,0.04);
+    margin-bottom:10px;
+}
+
+.entry-date{
+    font-size:9px;
+    letter-spacing:.26em;
+    text-transform:uppercase;
+    color:#746d91;
+    margin-bottom:8px;
+}
+
+.entry-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:22px;
+    color:#ece4d8;
+    margin-bottom:8px;
+}
+
+.entry-preview{
+    font-size:13px;
+    line-height:1.7;
+    color:#bdb5ca;
+}
+
+.add-link{
+    margin-top:14px;
+    display:block;
+    width:100%;
+    padding:12px;
+    border-radius:14px;
+    border:1px dashed rgba(220,220,255,0.14);
+    text-align:center;
+    color:#938aa9;
+    text-decoration:none;
+    transition:.3s ease;
+    font-size:12px;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+}
+
+.add-link:hover{
+    background:rgba(255,255,255,0.03);
+    color:#ddd4e8;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:980px){
+
+.dashboard{
+    grid-template-columns:1fr;
+}
+
+.title{
+    font-size:46px;
+}
+
+.index-grid{
+    grid-template-columns:1fr;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="dashboard">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="panel sidebar">
+
+        <a href="YOUR_MAIN_DASHBOARD_LINK_HERE"
+           class="return-card">
+
+            <div class="return-label">
+                Return To
+            </div>
+
+            <div class="return-title">
+                The Selenarium
+            </div>
+
+        </a>
+
+        <div class="small-widget">
+
+            <div class="widget-title">
+                Emotional Weather
+            </div>
+
+            <div class="mood-ring">
+                <div class="moon">☾</div>
+            </div>
+
+            <div class="mood-text">
+                Waning thoughts.<br>
+                Quiet tides.<br>
+                Gentle reflection.
+            </div>
+
+        </div>
+
+        <div class="small-widget">
+
+            <div class="widget-title">
+                Tonight's Thought
+            </div>
+
+            <div class="quote">
+                “And now that you don't have to be perfect, you can be good.”
+            </div>
+
+            <div class="quote-author">
+                — John Steinbeck
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="panel main">
+
+        <div class="header">
+
+            <div class="overline">
+                Personal Archive
+            </div>
+
+            <div class="title">
+                The Noctuary
+            </div>
+
+            <div class="subtitle">
+                Private reflections, memories, daily logs, and the records of becoming.
+            </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- FEATURE -->
+        <section class="feature-card">
+
+            <div class="feature-label">
+                Current Reflection
+            </div>
+
+            <div class="feature-title">
+                The Shape Of This Week
+            </div>
+
+            <div class="feature-desc">
+                A quiet space for processing emotions, preserving memories,
+                and tracing the small celestial movements of everyday life.
+            </div>
+
+            <a href="YOUR_CURRENT_ENTRY_LINK_HERE"
+               class="feature-btn">
+               Open Current Entry ✦
+            </a>
+
+        </section>
+
+        <!-- INDEX -->
+        <section>
+
+            <div class="section-heading">
+                <div class="section-title">
+                    Archive Index
+                </div>
+            </div>
+
+            <div class="index-grid">
+
+                <a class="index-card" href="YOUR_DAILY_LOGS_LINK">
+
+                    <div class="card-icon">🌙</div>
+
+                    <div class="card-title">
+                        Daily Logs
+                    </div>
+
+                    <div class="card-desc">
+                        Day-to-day reflections, fragmented thoughts,
+                        and quiet records of passing time.
+                    </div>
+
+                </a>
+
+                <a class="index-card" href="YOUR_DREAM_JOURNAL_LINK">
+
+                    <div class="card-icon">☁️</div>
+
+                    <div class="card-title">
+                        Dream Journal
+                    </div>
+
+                    <div class="card-desc">
+                        Dreams, symbols, fragments, and strange midnight landscapes.
+                    </div>
+
+                </a>
+
+                <a class="index-card" href="YOUR_MEMORY_ARCHIVE_LINK">
+
+                    <div class="card-icon">🕯️</div>
+
+                    <div class="card-title">
+                        Memory Archive
+                    </div>
+
+                    <div class="card-desc">
+                        Important memories, emotional snapshots,
+                        and preserved moments.
+                    </div>
+
+                </a>
+
+                <a class="index-card" href="YOUR_MONTHLY_REVIEWS_LINK">
+
+                    <div class="card-icon">✦</div>
+
+                    <div class="card-title">
+                        Monthly Reviews
+                    </div>
+
+                    <div class="card-desc">
+                        Reflections, patterns, lessons,
+                        and personal growth across time.
+                    </div>
+
+                </a>
+
+                <a class="index-card" href="YOUR_LETTERS_LINK">
+
+                    <div class="card-icon">✉️</div>
+
+                    <div class="card-title">
+                        Letters Never Sent
+                    </div>
+
+                    <div class="card-desc">
+                        Thoughts left unfinished,
+                        unsent words, and emotional honesty.
+                    </div>
+
+                </a>
+
+                <a class="index-card" href="YOUR_EMOTIONAL_CHECKIN_LINK">
+
+                    <div class="card-icon">☾</div>
+
+                    <div class="card-title">
+                        Emotional Check-Ins
+                    </div>
+
+                    <div class="card-desc">
+                        Mood tracking, emotional weather,
+                        and gentle self-awareness.
+                    </div>
+
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- RIGHT -->
+    <aside class="panel rightbar">
+
+        <div class="small-widget">
+
+            <div class="widget-title">
+                Recent Entries
+            </div>
+
+            <div class="mini-entry">
+
+                <div class="entry-date">
+                    July 14
+                </div>
+
+                <div class="entry-title">
+                    The Sea At Midnight
+                </div>
+
+                <div class="entry-preview">
+                    Some nights feel like standing at the edge
+                    of something enormous and unnamed.
+                </div>
+
+            </div>
+
+            <div class="mini-entry">
+
+                <div class="entry-date">
+                    July 11
+                </div>
+
+                <div class="entry-title">
+                    Soft Rain
+                </div>
+
+                <div class="entry-preview">
+                    The kind of afternoon that asks nothing of you
+                    except to exist inside it.
+                </div>
+
+            </div>
+
+            <a href="YOUR_NEW_ENTRY_LINK"
+               class="add-link">
+               + Add New Entry
+            </a>
+
+        </div>
+
+        <div class="small-widget">
+
+            <div class="widget-title">
+                Lunar Notes
+            </div>
+
+            <div class="quote">
+                “There are years that ask questions and years that answer.”
+            </div>
+
+            <div class="quote-author">
+                — Zora Neale Hurston
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>
+
+<script>
+const stars = document.getElementById('stars');
+
+for(let i=0;i<170;i++){
+
+    const s = document.createElement('div');
+    s.className='star';
+
+    const size = Math.random()*1.8 + .2;
+    const opacity = Math.random()*.6 + .08;
+
+    s.style.cssText=`
+        width:${size}px;
+        height:${size}px;
+        left:${Math.random()*100}%;
+        top:${Math.random()*100}%;
+        --dur:${2+Math.random()*6}s;
+        --delay:${Math.random()*8}s;
+        --op:${opacity};
+    `;
+
+    stars.appendChild(s);
+}
+</script>
+
+</body>
+</html>
