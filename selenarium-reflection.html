@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Reflection</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#191919;color:#e8dfc8;
+  font-family:'Josefin Sans',sans-serif;font-weight:300;
+  min-height:100vh;padding:22px 20px 28px;
+  position:relative;overflow:hidden;
+}
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--d) ease-in-out infinite;animation-delay:var(--delay);}
+@keyframes twinkle{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.12)}}
+.widget{position:relative;z-index:1;}
+
+.widget-title{
+  font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:#6b6585;
+  margin-bottom:18px;display:flex;align-items:center;gap:8px;
+}
+.widget-title::before{content:'◈';font-size:10px;color:#8b7fd4;}
+.widget-title::after{content:'';flex:1;height:1px;background:rgba(139,127,212,.15);}
+
+/* Quote display */
+.quote-stage{
+  min-height:130px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:18px 10px 14px;
+  position:relative;
+}
+
+.quote-ornament{
+  font-size:36px;line-height:1;color:#3a3858;
+  font-family:'Cormorant Garamond',serif;
+  position:absolute;top:4px;left:4px;
+  opacity:0.7;pointer-events:none;
+  font-style:italic;
+}
+
+.quote-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:15.5px;font-style:italic;font-weight:300;
+  line-height:1.75;color:#c8c0d8;
+  text-align:center;letter-spacing:.03em;
+  transition:opacity .6s ease, transform .6s ease;
+  padding:0 10px;
+}
+
+.quote-text.fade-out{opacity:0;transform:translateY(6px);}
+.quote-text.fade-in{opacity:1;transform:translateY(0);}
+
+.quote-attr{
+  font-size:9px;letter-spacing:.3em;text-transform:uppercase;
+  color:#6b6585;margin-top:12px;text-align:center;
+  transition:opacity .6s ease;
+}
+.quote-attr.fade-out{opacity:0;}
+
+.quote-source{
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:10px;color:#4a4860;margin-top:3px;text-align:center;
+}
+
+/* Navigation dots */
+.quote-nav{
+  display:flex;align-items:center;justify-content:center;
+  gap:8px;margin-top:14px;
+}
+.nav-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:rgba(139,127,212,.25);cursor:pointer;
+  transition:all .2s;border:1px solid rgba(139,127,212,.2);
+}
+.nav-dot.active{background:#8b7fd4;width:18px;border-radius:4px;}
+.nav-dot:hover:not(.active){background:rgba(139,127,212,.5);}
+
+/* Controls -->
+.controls{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+.ctrl-btn{
+  background:none;border:none;cursor:pointer;
+  color:#4a4860;font-size:16px;padding:4px 8px;
+  transition:color .2s;font-family:'Josefin Sans',sans-serif;
+  line-height:1;
+}
+.ctrl-btn:hover{color:#c8bfff;}
+.auto-label{font-size:8px;letter-spacing:.25em;text-transform:uppercase;color:#4a4860;}
+.auto-toggle{
+  display:flex;align-items:center;gap:6px;cursor:pointer;
+}
+.auto-pip{
+  width:24px;height:12px;border-radius:8px;
+  background:rgba(139,127,212,.15);border:1px solid rgba(139,127,212,.2);
+  position:relative;transition:all .25s;
+}
+.auto-pip.on{background:rgba(139,127,212,.35);border-color:rgba(139,127,212,.5);}
+.auto-pip::after{
+  content:'';position:absolute;top:2px;left:2px;
+  width:8px;height:8px;border-radius:50%;
+  background:#8b7fd4;opacity:.5;transition:all .25s;
+}
+.auto-pip.on::after{left:14px;opacity:1;}
+
+/* Edit panel */
+.edit-panel{
+  margin-top:14px;border-top:1px solid rgba(255,255,255,.04);
+  padding-top:12px;display:none;
+}
+.edit-panel.open{display:block;}
+.edit-section-head{
+  font-size:8px;letter-spacing:.35em;text-transform:uppercase;
+  color:#6b6585;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.edit-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;margin-bottom:10px;}
+.edit-list::-webkit-scrollbar{width:2px;}
+.edit-list::-webkit-scrollbar-thumb{background:rgba(139,127,212,.3);border-radius:2px;}
+.edit-quote-item{
+  background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);
+  border-radius:6px;padding:8px 10px;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.edit-quote-text{
+  flex:1;font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:11px;color:#a09ab8;line-height:1.5;
+}
+.edit-quote-del{
+  background:none;border:none;color:#4a4460;cursor:pointer;
+  font-size:13px;flex-shrink:0;transition:color .15s;margin-top:1px;
+}
+.edit-quote-del:hover{color:#c47a6a;}
+
+.add-quote-area{display:flex;flex-direction:column;gap:7px;}
+.form-input{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);border-radius:6px;
+  padding:7px 10px;color:#ddd8f0;
+  font-family:'Josefin Sans',sans-serif;
+  font-size:11px;letter-spacing:.04em;outline:none;
+  transition:border-color .2s;
+}
+.form-input:focus{border-color:rgba(139,127,212,.35);}
+.form-input::placeholder{color:#3a3a4a;}
+.form-input.tall{min-height:64px;resize:vertical;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;}
+.add-btn{
+  background:rgba(139,127,212,.14);border:1px solid rgba(139,127,212,.25);
+  border-radius:6px;padding:7px 14px;color:#c8bfff;
+  font-family:'Josefin Sans',sans-serif;font-size:9px;
+  letter-spacing:.25em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+}
+.add-btn:hover{background:rgba(139,127,212,.28);}
+
+.manage-btn{
+  font-size:8px;letter-spacing:.25em;text-transform:uppercase;
+  color:#4a4860;background:none;border:none;cursor:pointer;
+  transition:color .2s;font-family:'Josefin Sans',sans-serif;
+  display:flex;align-items:center;gap:5px;margin-top:10px;
+}
+.manage-btn:hover{color:#8b7fd4;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-title">Reflection</div>
+  <div class="quote-stage">
+    <span class="quote-ornament">"</span>
+    <div class="quote-text" id="quoteText"></div>
+    <div class="quote-attr" id="quoteAttr"></div>
+    <div class="quote-source" id="quoteSource"></div>
+  </div>
+
+  <div class="quote-nav" id="quoteNav"></div>
+
+  <div class="controls">
+    <button class="ctrl-btn" onclick="prevQuote()" title="Previous">‹</button>
+    <div class="auto-toggle" onclick="toggleAuto()" title="Auto-rotate">
+      <span class="auto-label">Auto</span>
+      <div class="auto-pip" id="autoPip"></div>
+    </div>
+    <button class="ctrl-btn" onclick="nextQuote()" title="Next">›</button>
+  </div>
+
+  <button class="manage-btn" onclick="toggleEdit()">
+    <span id="manageIcon">⊕</span>
+    <span id="manageLabel">Manage quotes</span>
+  </button>
+
+  <div class="edit-panel" id="editPanel">
+    <div class="edit-section-head">
+      <span>Your Collection</span>
+      <span id="quoteCount" style="color:#4a4860;"></span>
+    </div>
+    <div class="edit-list" id="editList"></div>
+    <div class="add-quote-area">
+      <textarea class="form-input tall" id="newText" placeholder="Add a quote or reflection..."></textarea>
+      <input class="form-input" id="newAttr" placeholder="— Attribution (optional)">
+      <input class="form-input" id="newSource" placeholder="Source, book, or context (optional)">
+      <button class="add-btn" onclick="addQuote()">Add to collection ✦</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Stars
+const starsEl=document.getElementById('stars');
+for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.12+Math.random()*0.4};`;starsEl.appendChild(s);}
+
+const DEFAULTS=[
+  {text:"The nitrogen in our DNA, the calcium in our teeth, the iron in our blood — all forged in the hearts of collapsing stars.",attr:"Carl Sagan",source:"Cosmos"},
+  {text:"I am not afraid of storms, for I am learning how to sail my ship.",attr:"Louisa May Alcott",source:"Little Women"},
+  {text:"There is a crack in everything. That is how the light gets in.",attr:"Leonard Cohen",source:"Anthem"},
+  {text:"I must be a mermaid. I have no fear of depths and a great fear of shallow living.",attr:"Anaïs Nin",source:""},
+  {text:"The cure for anything is salt water: sweat, tears, or the sea.",attr:"Isak Dinesen",source:""},
+  {text:"We are all just walking each other home.",attr:"Ram Dass",source:""},
+  {text:"She is too fond of books, and it has turned her brain.",attr:"Louisa May Alcott",source:""},
+  {text:"You are not a drop in the ocean. You are the entire ocean in a drop.",attr:"Rumi",source:""},
+];
+
+function load(){try{const s=localStorage.getItem('sel-quotes');return s?JSON.parse(s):null;}catch(e){return null;}}
+function save(d){try{localStorage.setItem('sel-quotes',JSON.stringify(d));}catch(e){}}
+function loadState(){try{return JSON.parse(localStorage.getItem('sel-quotes-state')||'{"idx":0,"auto":true}');}catch(e){return{idx:0,auto:true};}}
+function saveState(s){try{localStorage.setItem('sel-quotes-state',JSON.stringify(s));}catch(e){}}
+
+let quotes=load()||DEFAULTS.map((q,i)=>({...q,id:i+1}));
+let state=loadState();
+let idx=state.idx%quotes.length;
+let autoRotate=state.auto;
+let autoTimer=null;
+
+function persist(){save(quotes);saveState({idx,auto:autoRotate});}
+
+function showQuote(i,dir){
+  const qt=document.getElementById('quoteText');
+  const qa=document.getElementById('quoteAttr');
+  qt.classList.add('fade-out');
+  qa.classList.add('fade-out');
+  setTimeout(()=>{
+    idx=((i%quotes.length)+quotes.length)%quotes.length;
+    const q=quotes[idx];
+    qt.textContent=q.text;
+    qa.textContent=q.attr?'— '+q.attr:'';
+    document.getElementById('quoteSource').textContent=q.source||'';
+    qt.classList.remove('fade-out');qt.classList.add('fade-in');
+    qa.classList.remove('fade-out');
+    renderNav();
+    persist();
+  },350);
+}
+
+function renderNav(){
+  const nav=document.getElementById('quoteNav');
+  const total=Math.min(quotes.length,8);
+  nav.innerHTML='';
+  for(let i=0;i<total;i++){
+    const dot=document.createElement('div');
+    dot.className='nav-dot'+(i===idx%total?' active':'');
+    dot.onclick=(()=>{const _i=i;return()=>showQuote(_i);})(i);
+    nav.appendChild(dot);
+  }
+}
+
+function nextQuote(){showQuote(idx+1);resetAuto();}
+function prevQuote(){showQuote(idx-1);resetAuto();}
+
+function toggleAuto(){
+  autoRotate=!autoRotate;
+  document.getElementById('autoPip').classList.toggle('on',autoRotate);
+  if(autoRotate) startAuto(); else stopAuto();
+  persist();
+}
+
+function startAuto(){
+  stopAuto();
+  if(autoRotate) autoTimer=setInterval(()=>showQuote(idx+1),12000);
+}
+function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
+function resetAuto(){stopAuto();if(autoRotate)startAuto();}
+
+function toggleEdit(){
+  const panel=document.getElementById('editPanel');
+  const open=panel.classList.toggle('open');
+  document.getElementById('manageIcon').textContent=open?'⊖':'⊕';
+  document.getElementById('manageLabel').textContent=open?'Close':'Manage quotes';
+  if(open) renderEditList();
+}
+
+function renderEditList(){
+  const list=document.getElementById('editList');
+  document.getElementById('quoteCount').textContent=quotes.length+' quotes';
+  if(quotes.length===0){list.innerHTML='<div style="font-size:10px;color:#4a4460;font-style:italic;padding:8px;">No quotes yet — add some below.</div>';return;}
+  list.innerHTML=quotes.map((q,i)=>`
+    <div class="edit-quote-item">
+      <div class="edit-quote-text">"${q.text.substring(0,80)}${q.text.length>80?'…':''}"${q.attr?' — '+q.attr:''}</div>
+      <button class="edit-quote-del" onclick="deleteQuote(${q.id})">×</button>
+    </div>`).join('');
+}
+
+function addQuote(){
+  const text=document.getElementById('newText').value.trim();
+  if(!text) return;
+  quotes.push({
+    id:Date.now(),
+    text,
+    attr:document.getElementById('newAttr').value.trim(),
+    source:document.getElementById('newSource').value.trim()
+  });
+  save(quotes);
+  document.getElementById('newText').value='';
+  document.getElementById('newAttr').value='';
+  document.getElementById('newSource').value='';
+  renderEditList();
+  renderNav();
+}
+
+function deleteQuote(id){
+  quotes=quotes.filter(q=>q.id!==id);
+  if(idx>=quotes.length) idx=Math.max(0,quotes.length-1);
+  save(quotes);
+  if(quotes.length>0) showQuote(idx);
+  renderEditList();
+}
+
+// Init
+document.getElementById('autoPip').classList.toggle('on',autoRotate);
+showQuote(idx);
+if(autoRotate) startAuto();
+</script>
+</body>
+</html>

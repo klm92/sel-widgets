@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Upcoming</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#191919; color:#e8dfc8;
+  font-family:'Josefin Sans',sans-serif; font-weight:300;
+  min-height:100vh; padding:22px 20px;
+  position:relative; overflow:hidden;
+}
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--d) ease-in-out infinite;animation-delay:var(--delay);}
+@keyframes twinkle{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.12)}}
+.widget{position:relative;z-index:1;}
+
+.widget-title{font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:#6b6585;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.widget-title::before{content:'✦';font-size:10px;color:#8b7fd4;}
+.widget-title::after{content:'';flex:1;height:1px;background:rgba(139,127,212,.15);}
+
+/* Calendar syncs notice */
+.sync-note{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#4a4460;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.sync-dot{width:5px;height:5px;border-radius:50%;background:#5ab4a0;animation:pulse 2.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Upcoming items */
+.event-list{display:flex;flex-direction:column;gap:0;}
+
+.event-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.04);
+  cursor:pointer;border-radius:8px;transition:background .2s;
+  position:relative;
+}
+.event-item:hover{background:rgba(139,127,212,.05);}
+.event-item:last-child{border-bottom:none;}
+.event-item.today .date-badge{background:rgba(139,127,212,.2);border-color:rgba(139,127,212,.4);}
+.event-item.today .event-day{color:#c8bfff;}
+.event-item.past{opacity:.38;}
+
+/* Date badge */
+.date-badge{
+  flex-shrink:0;width:38px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:8px;padding:5px 4px;text-align:center;
+}
+.event-month{font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:#6b6585;display:block;}
+.event-day{font-size:18px;font-weight:100;color:#c8c0d8;line-height:1.1;display:block;letter-spacing:-.01em;}
+.event-weekday{font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:#4a4460;display:block;margin-top:1px;}
+
+/* Event body */
+.event-body{flex:1;min-width:0;padding-top:2px;}
+.event-icon-title{display:flex;align-items:center;gap:7px;margin-bottom:3px;}
+.event-icon-svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
+.event-title-text{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:400;color:#ddd8f0;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.event-meta{font-size:9px;letter-spacing:.15em;color:#6b6585;text-transform:uppercase;}
+.event-note{font-size:10px;color:#4a4460;letter-spacing:.05em;margin-top:2px;font-style:italic;font-family:'Cormorant Garamond',serif;}
+
+/* Category tag */
+.event-tag{
+  display:inline-block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+  padding:1px 7px;border-radius:20px;margin-top:4px;border:1px solid;
+}
+
+/* Countdown badge -->
+.countdown{
+  flex-shrink:0;font-size:8px;letter-spacing:.15em;text-transform:uppercase;
+  color:#6b6585;padding-top:4px;text-align:right;min-width:32px;
+}
+.countdown.soon{color:#c9a84c;}
+.countdown.today-text{color:#8b7fd4;font-weight:400;}
+
+/* Lunar events */
+.lunar-strip{
+  margin-top:14px;padding:10px 12px;
+  background:rgba(139,127,212,.05);
+  border:1px solid rgba(139,127,212,.1);
+  border-radius:10px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.lunar-ev{text-align:center;}
+.lunar-ev-icon{font-size:16px;display:block;margin-bottom:3px;}
+.lunar-ev-label{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#6b6585;display:block;}
+.lunar-ev-date{font-size:10px;color:#a09ab8;letter-spacing:.1em;display:block;margin-top:2px;}
+
+/* Add / edit modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,9,20,.92);
+  z-index:100;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:#1e1c2e;border:1px solid rgba(139,127,212,.22);
+  border-radius:14px;padding:24px;width:100%;max-width:320px;
+}
+.modal-title{font-size:9px;letter-spacing:.4em;text-transform:uppercase;color:#8b7fd4;margin-bottom:18px;}
+.field{margin-bottom:13px;}
+.field label{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:#6b6585;display:block;margin-bottom:5px;}
+.field input,.field textarea,.field select{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);border-radius:8px;
+  padding:8px 11px;color:#ddd8f0;
+  font-family:'Josefin Sans',sans-serif;font-size:11px;letter-spacing:.06em;outline:none;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(139,127,212,.35);}
+.field input::placeholder,.field textarea::placeholder{color:#3a3850;}
+.field textarea{height:56px;resize:none;}
+.field select option{background:#1e1c2e;}
+.icon-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.icon-opt{font-size:15px;cursor:pointer;padding:4px;border-radius:6px;border:1px solid transparent;transition:all .15s;opacity:.55;}
+.icon-opt:hover,.icon-opt.sel{opacity:1;border-color:rgba(139,127,212,.35);background:rgba(139,127,212,.1);}
+.modal-btns{display:flex;gap:8px;margin-top:18px;}
+.btn{flex:1;padding:9px;border-radius:8px;font-family:'Josefin Sans',sans-serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s;}
+.btn-save{background:#8b7fd4;color:#fff;}
+.btn-save:hover{background:#7a6ec3;}
+.btn-cancel{background:rgba(255,255,255,.05);color:#a09ab8;}
+.btn-cancel:hover{background:rgba(255,255,255,.1);}
+.btn-del{background:rgba(196,122,106,.12);color:#c47a6a;border:1px solid rgba(196,122,106,.2);}
+.btn-del:hover{background:rgba(196,122,106,.25);}
+
+.add-fab{
+  position:fixed;bottom:22px;right:22px;z-index:50;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(139,127,212,.18);border:1px solid rgba(139,127,212,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:#c8bfff;cursor:pointer;transition:all .2s;
+  font-weight:200;line-height:1;
+}
+.add-fab:hover{background:rgba(139,127,212,.35);}
+
+.empty-state{
+  text-align:center;padding:28px 10px;
+  font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:#3a3850;
+}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-title">Upcoming</div>
+  <div class="sync-note"><div class="sync-dot"></div>Synced with Calendar widget</div>
+  <div class="event-list" id="eventList"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">No upcoming events · tap + to add</div>
+  <div class="lunar-strip" id="lunarStrip"></div>
+</div>
+
+<div class="add-fab" id="addFab" title="Add event">+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">New Event</div>
+    <div class="field">
+      <label>Title</label>
+      <input id="fTitle" type="text" placeholder="Event name...">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input id="fDate" type="date">
+    </div>
+    <div class="field">
+      <label>Time (optional)</label>
+      <input id="fTime" type="time">
+    </div>
+    <div class="field">
+      <label>Note</label>
+      <textarea id="fNote" placeholder="Details, location..."></textarea>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <select id="fCat">
+        <option value="general">General</option>
+        <option value="vetmed">Vet Med</option>
+        <option value="writing">Writing</option>
+        <option value="daily">Daily</option>
+        <option value="life">Life & Home</option>
+        <option value="knowledge">Knowledge</option>
+        <option value="lunar">Lunar</option>
+        <option value="shinee">The Prism Room</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Icon</label>
+      <div class="icon-row" id="iconRow"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-del" id="btnDel" style="display:none;" onclick="deleteEvent()">Delete</button>
+      <button class="btn btn-save" onclick="saveEvent()">Save ✦</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Stars
+const se=document.getElementById('stars');
+for(let i=0;i<90;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*6}s;--op:${0.12+Math.random()*0.4};`;se.appendChild(s);}
+
+// Lunar calc
+const J2000=new Date(Date.UTC(2000,0,1,12,0,0)), SYN=29.53058867, MPD=86400000;
+function lunar(date){
+  const d=(date-J2000)/MPD,dc=((d%SYN)+SYN)%SYN;
+  const phases=['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'];
+  const max=[1.85,7.38,9.22,14.77,16.61,22.15,23.99,29.53];
+  const idx=max.findIndex(m=>dc<m);
+  const names=['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+  const toFull=dc<14.77?14.77-dc:SYN-dc+14.77;
+  const toNew=SYN-dc;
+  return{icon:phases[idx<0?0:idx],name:names[idx<0?0:idx],day:Math.floor(dc)+1,toFull:Math.ceil(toFull),toNew:Math.ceil(toNew)};
+}
+function addDays(date,n){return new Date(date.getTime()+n*MPD);}
+
+// Category config
+const CATS={
+  general:  {color:'#a09ab8',bg:'rgba(160,154,184,.12)',label:'General'},
+  vetmed:   {color:'#5ab4a0',bg:'rgba(90,180,160,.12)', label:'Vet Med'},
+  writing:  {color:'#b07090',bg:'rgba(176,112,144,.12)',label:'Writing'},
+  daily:    {color:'#8b7fd4',bg:'rgba(139,127,212,.12)',label:'Daily'},
+  life:     {color:'#c47a6a',bg:'rgba(196,122,106,.12)',label:'Life'},
+  knowledge:{color:'#c9a84c',bg:'rgba(201,168,76,.12)', label:'Knowledge'},
+  lunar:    {color:'#c8bfff',bg:'rgba(200,191,255,.1)', label:'Lunar'},
+  shinee:   {color:'#7ab8d0',bg:'rgba(122,184,208,.1)', label:'The Prism Room'},
+};
+
+const ICONS=['✦','🌙','⚕️','✍️','📚','🎵','🐾','🌿','💊','🔭','🏡','🎬','⭐','📝','🩺','🎓','🌸','💎','📖','🎶'];
+
+// Storage — shared with calendar widget
+function storageKey(y,m,d){return`sel-cal-${y}-${m}-${d}`;}
+function upcomingKey(){return'sel-upcoming-events';}
+
+// Load upcoming events (own store + calendar store combined view)
+function loadUpcoming(){
+  try{const s=localStorage.getItem(upcomingKey());return s?JSON.parse(s):[];}catch(e){return[];}
+}
+function saveUpcoming(evts){
+  try{localStorage.setItem(upcomingKey(),JSON.stringify(evts));}catch(e){}
+}
+
+// Also pull from calendar widget storage
+function loadCalendarEvents(){
+  const events=[];
+  try{
+    for(let k in localStorage){
+      if(k.startsWith('sel-cal-')){
+        const parts=k.split('-');
+        if(parts.length>=5){
+          const y=parseInt(parts[2]),m=parseInt(parts[3]),d=parseInt(parts[4]);
+          const stored=JSON.parse(localStorage.getItem(k)||'[]');
+          stored.forEach(ev=>{
+            events.push({id:`cal-${k}-${ev.text}`,title:ev.text,icon:ev.icon||'✦',
+              date:`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,
+              category:'general',note:'',fromCalendar:true});
+          });
+        }
+      }
+    }
+  }catch(e){}
+  return events;
+}
+
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WEEKDAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS_LONG=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function formatDate(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  return{month:MONTHS[d.getMonth()],day:d.getDate(),weekday:WEEKDAYS[d.getDay()],full:d};
+}
+
+function daysFromNow(dateStr){
+  const now=new Date();now.setHours(0,0,0,0);
+  const d=new Date(dateStr+'T00:00:00');d.setHours(0,0,0,0);
+  return Math.round((d-now)/MPD);
+}
+
+function render(){
+  const own=loadUpcoming();
+  const cal=loadCalendarEvents();
+
+  // Merge, deduplicate by id
+  const ownIds=new Set(own.map(e=>e.id));
+  const merged=[...own,...cal.filter(e=>!ownIds.has(e.id))];
+
+  // Sort by date, filter past > 1 day
+  const now=new Date();now.setHours(0,0,0,0);
+  const all=merged.filter(e=>new Date(e.date+'T00:00:00')>=new Date(now.getTime()-MPD));
+  all.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const list=document.getElementById('eventList');
+  list.innerHTML='';
+  const empty=document.getElementById('emptyState');
+
+  if(all.length===0){empty.style.display='block';}
+  else{
+    empty.style.display='none';
+    all.slice(0,10).forEach(ev=>{
+      const diff=daysFromNow(ev.date);
+      const fd=formatDate(ev.date);
+      const cat=CATS[ev.category]||CATS.general;
+      const isPast=diff<0;
+      const isToday=diff===0;
+
+      const item=document.createElement('div');
+      item.className='event-item'+(isToday?' today':'')+(isPast?' past':'');
+
+      let countdownHtml='';
+      if(isToday) countdownHtml=`<div class="countdown today-text">Today</div>`;
+      else if(diff===1) countdownHtml=`<div class="countdown soon">Tomorrow</div>`;
+      else if(diff<=7&&diff>0) countdownHtml=`<div class="countdown soon">In ${diff}d</div>`;
+      else if(diff>0) countdownHtml=`<div class="countdown">In ${diff}d</div>`;
+      else countdownHtml=`<div class="countdown">${Math.abs(diff)}d ago</div>`;
+
+      const timeStr=ev.time?`· ${ev.time}`:'';
+      const calBadge=ev.fromCalendar?`<span style="font-size:7px;letter-spacing:.15em;color:#4a4460;margin-left:4px;text-transform:uppercase;">cal</span>`:'';
+
+      item.innerHTML=`
+        <div class="date-badge">
+          <span class="event-month">${fd.month}</span>
+          <span class="event-day">${fd.day}</span>
+          <span class="event-weekday">${fd.weekday}</span>
+        </div>
+        <div class="event-body">
+          <div class="event-icon-title">
+            <span style="font-size:14px;">${ev.icon||'✦'}</span>
+            <span class="event-title-text">${ev.title}</span>${calBadge}
+          </div>
+          <div class="event-meta">${timeStr?timeStr.trim():''}</div>
+          ${ev.note?`<div class="event-note">${ev.note}</div>`:''}
+          <span class="event-tag" style="color:${cat.color};background:${cat.bg};border-color:${cat.color}40;">${cat.label}</span>
+        </div>
+        ${countdownHtml}`;
+
+      if(!ev.fromCalendar){
+        item.ondblclick=()=>openModal(ev.id);
+        item.title='Double-click to edit';
+      }
+      list.appendChild(item);
+    });
+  }
+
+  // Lunar strip
+  const now2=new Date();
+  const lun=lunar(now2);
+  const fullDate=addDays(now2,lun.toFull);
+  const newDate=addDays(now2,lun.toNew);
+  document.getElementById('lunarStrip').innerHTML=`
+    <div class="lunar-ev">
+      <span class="lunar-ev-icon">${lun.icon}</span>
+      <span class="lunar-ev-label">Now · Day ${lun.day}</span>
+      <span class="lunar-ev-date">${lun.name}</span>
+    </div>
+    <div class="lunar-ev" style="text-align:center;">
+      <span class="lunar-ev-icon">🌕</span>
+      <span class="lunar-ev-label">Full Moon</span>
+      <span class="lunar-ev-date">${MONTHS[fullDate.getMonth()]} ${fullDate.getDate()}</span>
+    </div>
+    <div class="lunar-ev" style="text-align:right;">
+      <span class="lunar-ev-icon">🌑</span>
+      <span class="lunar-ev-label">New Moon</span>
+      <span class="lunar-ev-date">${MONTHS[newDate.getMonth()]} ${newDate.getDate()}</span>
+    </div>`;
+}
+
+// Modal
+let editId=null, selIcon=ICONS[0];
+
+function buildIconRow(){
+  const row=document.getElementById('iconRow');row.innerHTML='';
+  ICONS.forEach(ic=>{
+    const el=document.createElement('span');el.className='icon-opt'+(ic===selIcon?' sel':'');
+    el.textContent=ic;el.onclick=()=>{selIcon=ic;buildIconRow();};
+    row.appendChild(el);
+  });
+}
+
+function openModal(id){
+  editId=id||null;
+  const evts=loadUpcoming();
+  const ev=id?evts.find(e=>e.id===id):null;
+  document.getElementById('modalTitle').textContent=ev?'Edit Event':'New Event';
+  document.getElementById('fTitle').value=ev?ev.title:'';
+  document.getElementById('fDate').value=ev?ev.date:new Date().toISOString().split('T')[0];
+  document.getElementById('fTime').value=ev?ev.time||'':'';
+  document.getElementById('fNote').value=ev?ev.note||'':'';
+  document.getElementById('fCat').value=ev?ev.category:'general';
+  selIcon=ev?ev.icon||ICONS[0]:ICONS[0];
+  buildIconRow();
+  document.getElementById('btnDel').style.display=ev?'block':'none';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');editId=null;}
+
+function saveEvent(){
+  const title=document.getElementById('fTitle').value.trim();
+  const date=document.getElementById('fDate').value;
+  if(!title||!date)return;
+  const evts=loadUpcoming();
+  const ev={id:editId||(Date.now()+Math.random()).toString(36),
+    title,date,time:document.getElementById('fTime').value,
+    note:document.getElementById('fNote').value.trim(),
+    category:document.getElementById('fCat').value,
+    icon:selIcon,fromCalendar:false};
+  if(editId){const i=evts.findIndex(e=>e.id===editId);if(i>-1)evts[i]=ev;else evts.push(ev);}
+  else evts.push(ev);
+  saveUpcoming(evts);
+
+  // Also write to calendar storage so calendar widget sees it
+  const d=new Date(date+'T12:00:00');
+  const ck=storageKey(d.getFullYear(),d.getMonth(),d.getDate());
+  try{
+    const existing=JSON.parse(localStorage.getItem(ck)||'[]');
+    if(!existing.find(e=>e.text===title)){existing.push({icon:selIcon,text:title});localStorage.setItem(ck,JSON.stringify(existing));}
+  }catch(e){}
+
+  closeModal();render();
+}
+
+function deleteEvent(){
+  if(!editId)return;
+  const evts=loadUpcoming().filter(e=>e.id!==editId);
+  saveUpcoming(evts);closeModal();render();
+}
+
+document.getElementById('addFab').onclick=()=>openModal(null);
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+render();
+setInterval(render,60000);
+</script>
+</body>
+</html>
