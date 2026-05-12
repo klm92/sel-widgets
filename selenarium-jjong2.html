@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · For Jonghyun</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Josefin+Sans:wght@100;200;300&family=IM+Fell+English:ital@0;1&family=Nanum+Pen+Script&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:#191919;
+  color:#e8dfc8;
+  font-family:'Josefin Sans',sans-serif;
+  font-weight:300;
+  min-height:100vh;
+  padding:28px 22px 32px;
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.stars{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
+}
+
+.star{
+  position:absolute;
+  background:white;
+  border-radius:50%;
+  animation:twinkle var(--d) ease-in-out infinite;
+  animation-delay:var(--delay);
+}
+
+@keyframes twinkle{
+  0%,100%{opacity:var(--op)}
+  50%{opacity:calc(var(--op)*0.08)}
+}
+
+.widget{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:310px;
+  text-align:center;
+}
+
+.moon-wrap{
+  position:relative;
+  display:inline-block;
+  margin-bottom:20px;
+}
+
+.moon-glow{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:130px;
+  height:130px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(232,216,180,0.25) 0%, rgba(180,150,80,0.08) 50%, transparent 75%);
+  animation:breathe 6s ease-in-out infinite;
+  pointer-events:none;
+}
+
+@keyframes breathe{
+  0%,100%{
+    transform:translate(-50%,-50%) scale(1);
+    opacity:1;
+  }
+  50%{
+    transform:translate(-50%,-50%) scale(1.12);
+    opacity:0.8;
+  }
+}
+
+.moon-svg{
+  display:block;
+  position:relative;
+  z-index:1;
+}
+
+.name-wrap{
+  margin-bottom:6px;
+}
+
+.name-the{
+  font-family:'Nanum Pen Script',cursive;
+  font-size:22px;
+  color:#8f86b3;
+  display:block;
+  margin-bottom:6px;
+  letter-spacing:.02em;
+  text-shadow:0 0 18px rgba(180,160,220,.15);
+}
+
+.name-main{
+  font-family:'Cormorant Garamond',serif;
+  font-size:30px;
+  font-weight:300;
+  letter-spacing:.18em;
+  color:#e8e0d0;
+  line-height:1;
+  text-shadow:0 0 40px rgba(232,216,180,0.3);
+}
+
+.name-hangul{
+  font-size:14px;
+  color:#6b6585;
+  letter-spacing:.3em;
+  display:block;
+  margin-top:6px;
+  font-weight:100;
+}
+
+.ornament{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:16px 0;
+  justify-content:center;
+}
+
+.orn-line{
+  width:50px;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,192,216,0.3));
+}
+
+.orn-line.r{
+  background:linear-gradient(90deg,rgba(200,192,216,0.3),transparent);
+}
+
+.orn-star{
+  font-size:10px;
+  color:#c9a84c;
+  opacity:.6;
+}
+
+.quote-wrap{
+  min-height:90px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:0 8px;
+}
+
+.quote-body{
+  font-family:'Cormorant Garamond',serif;
+  font-size:15px;
+  font-style:italic;
+  font-weight:300;
+  line-height:1.9;
+  color:#c0b8d0;
+  letter-spacing:.03em;
+  text-align:center;
+}
+
+.quote-attr{
+  font-size:8.5px;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  color:#4a4860;
+  margin-top:12px;
+}
+
+.prince-section{
+  margin-top:20px;
+  padding:14px 16px;
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(200,192,216,0.07);
+  border-radius:12px;
+  position:relative;
+  overflow:hidden;
+}
+
+.prince-section::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,192,216,0.18),transparent);
+}
+
+.prince-quote{
+  font-family:'Cormorant Garamond',serif;
+  font-size:12.5px;
+  font-style:italic;
+  font-weight:300;
+  color:#9890a8;
+  line-height:1.8;
+  letter-spacing:.02em;
+  text-align:center;
+}
+
+.prince-attr{
+  font-size:8px;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:#3a3850;
+  margin-top:8px;
+  display:block;
+  text-align:center;
+}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="widget">
+
+  <div class="moon-wrap">
+    <div class="moon-glow"></div>
+
+    <svg class="moon-svg" viewBox="0 0 110 110" width="110" height="110" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="mf" cx="38%" cy="35%">
+          <stop offset="0%" stop-color="#f8f0e0"/>
+          <stop offset="55%" stop-color="#d8c070"/>
+          <stop offset="100%" stop-color="#a08040"/>
+        </radialGradient>
+
+        <radialGradient id="halo" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#e8d890" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="#e8d890" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <circle cx="55" cy="55" r="52" fill="url(#halo)"/>
+      <circle cx="55" cy="55" r="38" fill="url(#mf)"/>
+      <circle cx="67" cy="55" r="30" fill="#191919" opacity=".96"/>
+
+      <circle cx="40" cy="44" r="4.5" fill="#c8a858" opacity=".2"/>
+      <circle cx="36" cy="58" r="3" fill="#c8a858" opacity=".16"/>
+      <circle cx="45" cy="68" r="3.5" fill="#c8a858" opacity=".18"/>
+      <circle cx="32" cy="50" r="2" fill="#c8a858" opacity=".12"/>
+
+      <g opacity=".55">
+        <circle cx="88" cy="22" r="1.8" fill="#f0e8d0"/>
+        <circle cx="96" cy="35" r="1.2" fill="#f0e8d0"/>
+        <circle cx="100" cy="50" r="0.9" fill="#f0e8d0"/>
+        <circle cx="92" cy="15" r="1.0" fill="#f0e8d0"/>
+        <circle cx="82" cy="12" r="0.7" fill="#f0e8d0"/>
+      </g>
+
+      <g transform="translate(82,28)" opacity=".65">
+        <polygon points="0,-5 1.2,-1.2 5,0 1.2,1.2 0,5 -1.2,1.2 -5,0 -1.2,-1.2" fill="#f0d870"/>
+      </g>
+
+      <g transform="translate(26,82)" opacity=".78">
+        <line x1="0" y1="0" x2="0" y2="14"
+              stroke="#8f86b3"
+              stroke-width="1.2"/>
+
+        <path d="M0 8 Q-4 6 -5 10"
+              fill="none"
+              stroke="#8f86b3"
+              stroke-width=".8"/>
+
+        <path d="M0 10 Q4 8 5 12"
+              fill="none"
+              stroke="#8f86b3"
+              stroke-width=".8"/>
+
+        <circle cx="0" cy="-2" r="4.5"
+                fill="#b88fb2"
+                opacity=".85"/>
+
+        <circle cx="-1" cy="-3" r="2"
+                fill="#d8b0c8"
+                opacity=".7"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="name-wrap">
+    <span class="name-the">수고했어요</span>
+    <div class="name-main">JONGHYUN</div>
+    <span class="name-hangul">종현 ✦ SHINee</span>
+  </div>
+
+  <div class="ornament">
+    <div class="orn-line"></div>
+    <span class="orn-star">◆</span>
+    <div class="orn-line r"></div>
+  </div>
+
+  <div class="quote-wrap">
+    <div class="quote-body">
+      “I want to tell everyone — you did well today. You really did well.”
+    </div>
+
+    <div class="quote-attr">
+      — Jonghyun
+    </div>
+  </div>
+
+  <div class="ornament" style="margin-top:18px;">
+    <div class="orn-line"></div>
+    <span class="orn-star" style="font-size:7px;">✦</span>
+    <div class="orn-line r"></div>
+  </div>
+
+  <div class="prince-section">
+    <div class="prince-quote" id="princeCycle">
+      “You become responsible, forever, for what you have tamed.”
+    </div>
+
+    <span class="prince-attr">
+      Antoine de Saint-Exupéry · The Little Prince
+    </span>
+  </div>
+
+</div>
+
+<script>
+const starsEl = document.getElementById('stars');
+
+for(let i = 0; i < 160; i++){
+  const s = document.createElement('div');
+  s.className = 'star';
+
+  const sz = Math.random() * 1.8 + 0.2;
+  const op = Math.random() * 0.55 + 0.08;
+
+  s.style.cssText = `
+    width:${sz}px;
+    height:${sz}px;
+    top:${Math.random()*100}%;
+    left:${Math.random()*100}%;
+    --d:${2.5+Math.random()*5}s;
+    --delay:${Math.random()*8}s;
+    --op:${op};
+  `;
+
+  starsEl.appendChild(s);
+}
+
+const PRINCE_QUOTES = [
+  "You become responsible, forever, for what you have tamed.",
+  "It is only with the heart that one can see rightly; what is essential is invisible to the eye.",
+  "And when your sorrow is comforted, you will be content that you have known me.",
+  "In one of the stars I shall be living. In one of them I shall be laughing.",
+  "My flower is ephemeral, and she has only four thorns to defend herself against the world."
+];
+
+let pIdx = 0;
+
+function cyclePrince(){
+  const el = document.getElementById('princeCycle');
+
+  el.style.opacity = '0';
+  el.style.transition = 'opacity .7s';
+
+  setTimeout(() => {
+    pIdx = (pIdx + 1) % PRINCE_QUOTES.length;
+    el.textContent = '“' + PRINCE_QUOTES[pIdx] + '”';
+    el.style.opacity = '1';
+  }, 500);
+}
+
+setInterval(cyclePrince, 13000);
+</script>
+
+</body>
+</html>
