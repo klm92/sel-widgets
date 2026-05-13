@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Cabinet of Curiosities</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Cinzel:wght@400;500&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&display=swap');
+
+:root {
+  --bg: #191919;
+  --panel: rgba(20,18,32,0.92);
+  --border: rgba(180,170,220,0.10);
+  --border2: rgba(180,170,220,0.22);
+  --gold: #c9a84c;
+  --goldlo: rgba(201,168,76,0.2);
+  --silver: #c0b8d0;
+  --silverlo: rgba(192,184,208,0.15);
+  --accent: #8b7fd4;
+  --accentlo: rgba(139,127,212,0.15);
+  --text: #c8c0d8;
+  --text2: #8a8298;
+  --text3: #4a4660;
+  --teal: #5ab4a0;
+  --rose: #b07090;
+  --coral: #c47a6a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 22px 22px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stars { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+.s { position:absolute; background:white; border-radius:50%; animation:tw var(--d) ease-in-out infinite var(--dl); }
+@keyframes tw { 0%,100%{opacity:var(--op)} 50%{opacity:calc(var(--op)*0.1)} }
+
+.widget { position:relative; z-index:1; }
+
+/* ── HEADER ── */
+.widget-title {
+  font-size:9px; letter-spacing:.45em; text-transform:uppercase; color:var(--text3);
+  margin-bottom:16px; display:flex; align-items:center; gap:8px;
+}
+.widget-title::before { content:'◈'; font-size:10px; color:var(--gold); }
+.widget-title::after { content:''; flex:1; height:1px; background:rgba(201,168,76,.12); }
+
+/* ── TAB STRIP ── */
+.tab-strip {
+  display: flex; gap: 4px; margin-bottom: 14px;
+  overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.tab-strip::-webkit-scrollbar { display:none; }
+
+.tab {
+  flex-shrink: 0;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-size: 8.5px; letter-spacing: .22em; text-transform: uppercase;
+  cursor: pointer; border: 1px solid transparent;
+  transition: all .2s; white-space: nowrap;
+  color: var(--text3); background: none;
+  font-family: 'Josefin Sans', sans-serif;
+}
+.tab:hover { color: var(--silver); border-color: var(--border); }
+.tab.active {
+  color: var(--gold);
+  border-color: rgba(201,168,76,.3);
+  background: rgba(201,168,76,.06);
+}
+
+/* ── DISPLAY PANEL ── */
+.display-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+  min-height: 280px;
+  transition: min-height .3s ease;
+}
+.display-panel::before {
+  content: ''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: .3;
+}
+
+/* Glass shimmer */
+.display-panel::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:45%;
+  background: linear-gradient(180deg, rgba(255,255,255,.03) 0%, transparent 100%);
+  border-radius: 14px 14px 0 0;
+  pointer-events:none;
+}
+
+/* ── TYPE BADGE ── */
+.type-badge {
+  position: absolute; top:14px; right:14px; z-index:3;
+  display: flex; align-items:center; gap:5px;
+  padding: 4px 10px; border-radius:20px;
+  border: 1px solid; font-size:8px; letter-spacing:.25em; text-transform:uppercase;
+  font-family: 'Josefin Sans', sans-serif;
+  backdrop-filter: blur(6px);
+}
+
+/* ── CONTENT AREAS ── */
+.content-wrap {
+  padding: 20px 20px 18px;
+  display: flex; flex-direction: column;
+  gap: 14px;
+  position: relative; z-index:2;
+  transition: opacity .4s ease, transform .4s ease;
+}
+.content-wrap.fade-out { opacity:0; transform:translateY(6px); }
+.content-wrap.fade-in  { opacity:1; transform:translateY(0); }
+
+/* Image area */
+.img-frame {
+  width: 100%; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.02);
+  position: relative;
+}
+.img-frame img {
+  width:100%; display:block;
+  object-fit: cover; max-height: 200px;
+  border-radius: 9px;
+}
+.img-placeholder {
+  height: 180px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px;
+  cursor:pointer;
+}
+.img-placeholder-icon { font-size:28px; opacity:.3; }
+.img-placeholder-text { font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:var(--text3); }
+.img-url-bar {
+  display:flex; gap:6px; margin-top:8px;
+}
+.img-url-input {
+  flex:1; background:rgba(255,255,255,.03);
+  border:1px solid var(--border); border-radius:6px;
+  padding:5px 9px; color:var(--text);
+  font-family:'Josefin Sans',sans-serif; font-size:10px;
+  letter-spacing:.03em; outline:none;
+  transition:border-color .2s;
+}
+.img-url-input:focus { border-color:rgba(201,168,76,.35); }
+.img-url-input::placeholder { color:var(--text3); }
+.img-set-btn {
+  background:var(--goldlo); border:1px solid rgba(201,168,76,.25);
+  border-radius:6px; padding:5px 11px; color:var(--gold);
+  font-family:'Josefin Sans',sans-serif; font-size:9px;
+  letter-spacing:.2em; cursor:pointer; transition:all .2s; white-space:nowrap;
+}
+.img-set-btn:hover { background:rgba(201,168,76,.3); }
+
+/* Text content area */
+.text-content {
+  cursor: pointer;
+  min-height: 60px;
+}
+
+.main-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; font-style: italic; font-weight: 300;
+  line-height: 1.8; color: #d0c8e0;
+  letter-spacing: .03em;
+  transition: opacity .3s;
+}
+.main-text.quote::before { content:'\201C'; }
+.main-text.quote::after  { content:'\201D'; }
+
+.main-text.fact    { font-style: normal; font-size:14.5px; color:#c8c0d8; }
+.main-text.object  { font-style: normal; font-size:14.5px; }
+.main-text.lyric   { font-style: italic; color:#c0b8d0; letter-spacing:.04em; line-height:2; }
+.main-text.memory  { font-style: italic; color:#b8b0c8; font-size:15px; }
+.main-text.hyper   { font-style: normal; font-size:14.5px; color:#d0c8e0; }
+
+.attr-text {
+  font-size:9px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--text3); margin-top:8px;
+  display:block;
+}
+
+.empty-prompt {
+  font-family:'IM Fell English',serif; font-style:italic;
+  font-size:13px; color:var(--text3); line-height:1.8;
+  text-align:center; padding:10px 0;
+}
+
+/* ── EDIT PANEL (inline) ── */
+.edit-area {
+  display:none; padding:0 20px 18px;
+  flex-direction:column; gap:8px;
+  position: relative; z-index:2;
+}
+.edit-area.open { display:flex; }
+.edit-label {
+  font-size:8px; letter-spacing:.32em; text-transform:uppercase;
+  color:var(--text3); display:block; margin-bottom:4px;
+}
+.edit-input {
+  width:100%; background:rgba(255,255,255,.03);
+  border:1px solid var(--border2); border-radius:7px;
+  padding:8px 12px; color:var(--text);
+  font-family:'Cormorant Garamond',serif; font-style:italic;
+  font-size:14px; line-height:1.6; letter-spacing:.03em;
+  outline:none; resize:none;
+  transition:border-color .2s;
+}
+.edit-input.plain {
+  font-family:'Josefin Sans',sans-serif; font-style:normal;
+  font-size:12px; letter-spacing:.04em;
+}
+.edit-input:focus { border-color:rgba(201,168,76,.4); }
+.edit-input::placeholder { color:var(--text3); font-style:italic; }
+.edit-btns { display:flex; gap:7px; }
+.ebtn {
+  flex:1; padding:7px; border-radius:7px;
+  font-family:'Josefin Sans',sans-serif; font-size:9px;
+  letter-spacing:.2em; text-transform:uppercase;
+  cursor:pointer; border:none; transition:all .2s;
+}
+.ebtn-save { background:var(--goldlo); border:1px solid rgba(201,168,76,.28); color:var(--gold); }
+.ebtn-save:hover { background:rgba(201,168,76,.3); }
+.ebtn-cancel { background:rgba(255,255,255,.04); border:1px solid var(--border); color:var(--text3); }
+.ebtn-cancel:hover { color:var(--silver); }
+
+/* ── FOOTER ── */
+.cabinet-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 11px 20px 0;
+  border-top: 1px solid rgba(255,255,255,.04);
+  position: relative; z-index:2;
+}
+.footer-nav { display:flex; gap:4px; }
+.fnav-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(201,168,76,.2); cursor:pointer; transition:all .2s;
+  border:1px solid rgba(201,168,76,.15);
+}
+.fnav-dot.active { background:var(--gold); width:16px; border-radius:3px; }
+.fnav-dot:hover:not(.active) { background:rgba(201,168,76,.4); }
+
+.footer-controls { display:flex; gap:8px; align-items:center; }
+.icon-ctrl {
+  background:none; border:none; cursor:pointer;
+  color:var(--text3); font-size:16px; line-height:1;
+  padding:2px 6px; transition:color .2s;
+  font-family:'Josefin Sans',sans-serif;
+}
+.icon-ctrl:hover { color:var(--gold); }
+
+.auto-wrap {
+  display:flex; align-items:center; gap:5px; cursor:pointer;
+}
+.auto-pip {
+  width:22px; height:11px; border-radius:7px;
+  background:rgba(201,168,76,.1); border:1px solid rgba(201,168,76,.18);
+  position:relative; transition:all .25s;
+}
+.auto-pip.on { background:rgba(201,168,76,.28); border-color:rgba(201,168,76,.45); }
+.auto-pip::after {
+  content:''; position:absolute; top:1.5px; left:1.5px;
+  width:8px; height:8px; border-radius:50%;
+  background:var(--gold); opacity:.4; transition:all .25s;
+}
+.auto-pip.on::after { left:12px; opacity:1; }
+.auto-label { font-size:8px; letter-spacing:.22em; text-transform:uppercase; color:var(--text3); }
+</style>
+</head>
+<body>
+<div class="stars" id="sf"></div>
+
+<div class="widget">
+  <div class="widget-title">Cabinet of Curiosities</div>
+
+  <!-- Tab strip -->
+  <div class="tab-strip" id="tabStrip"></div>
+
+  <!-- Display panel -->
+  <div class="display-panel" id="displayPanel">
+    <div class="type-badge" id="typeBadge"></div>
+    <div class="content-wrap" id="contentWrap"></div>
+    <div class="edit-area" id="editArea"></div>
+    <div class="cabinet-footer">
+      <div class="footer-nav" id="footerNav"></div>
+      <div class="footer-controls">
+        <div class="auto-wrap" onclick="toggleAuto()">
+          <span class="auto-label">Auto</span>
+          <div class="auto-pip" id="autoPip"></div>
+        </div>
+        <button class="icon-ctrl" onclick="prev()" title="Previous">‹</button>
+        <button class="icon-ctrl" onclick="next()" title="Next">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ──
+const sf=document.getElementById('sf');
+for(let i=0;i<100;i++){
+  const s=document.createElement('div'); s.className='s';
+  const sz=Math.random()*1.7+0.3;
+  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*7}s;--op:${0.1+Math.random()*0.42};`;
+  sf.appendChild(s);
+}
+
+// ── DRAWER DEFINITIONS ──
+// Each drawer: id, label, icon, color, description, fields
+const DRAWERS = [
+  {
+    id:'image',
+    label:'Image',
+    icon:'◉',
+    color:'#c9a84c',
+    colorlo:'rgba(201,168,76,0.15)',
+    desc:'A favourite image or photograph',
+    type:'image',
+    fields:[{key:'url',label:'Image URL',placeholder:'Paste a direct image URL (jpg, png, webp...)',plain:true},{key:'caption',label:'Caption (optional)',placeholder:'a note about this image...',rows:1}]
+  },
+  {
+    id:'quote',
+    label:'Quote',
+    icon:'◈',
+    color:'#8b7fd4',
+    colorlo:'rgba(139,127,212,0.15)',
+    desc:'A saved quote',
+    type:'quote',
+    fields:[{key:'text',label:'Quote',placeholder:'The words that stayed with you...',rows:3},{key:'attr',label:'Attribution',placeholder:'— who said it, where',rows:1}]
+  },
+  {
+    id:'object',
+    label:'Object',
+    icon:'◎',
+    color:'#5ab4a0',
+    colorlo:'rgba(90,180,160,0.15)',
+    desc:'A currently loved object',
+    type:'object',
+    fields:[{key:'text',label:'The object',placeholder:'What is it? Why do you love it?',rows:3},{key:'attr',label:'Where it came from (optional)',placeholder:'',rows:1}]
+  },
+  {
+    id:'lyric',
+    label:'Lyric',
+    icon:'♪',
+    color:'#b07090',
+    colorlo:'rgba(176,112,144,0.15)',
+    desc:'A song lyric living in your head',
+    type:'lyric',
+    fields:[{key:'text',label:'Lyric',placeholder:'The line that won\'t leave...',rows:3},{key:'attr',label:'Song · Artist',placeholder:'Song title · Artist name',rows:1}]
+  },
+  {
+    id:'fascination',
+    label:'Fascination',
+    icon:'✦',
+    color:'#c9a84c',
+    colorlo:'rgba(201,168,76,0.12)',
+    desc:'A random fascination',
+    type:'fact',
+    fields:[{key:'text',label:'What has you fascinated',placeholder:'The thing you can\'t stop thinking about...',rows:3},{key:'attr',label:'Source or context (optional)',placeholder:'',rows:1}]
+  },
+  {
+    id:'hyper',
+    label:'Hyperfixation',
+    icon:'◐',
+    color:'#6a7fc1',
+    colorlo:'rgba(106,127,193,0.15)',
+    desc:'Current hyperfixation',
+    type:'hyper',
+    fields:[{key:'text',label:'Current hyperfixation',placeholder:'What world are you in right now?',rows:3},{key:'attr',label:'Why it has you (optional)',placeholder:'',rows:1}]
+  },
+  {
+    id:'fact',
+    label:'Odd Fact',
+    icon:'⬡',
+    color:'#a0c878',
+    colorlo:'rgba(160,200,120,0.12)',
+    desc:'An odd or wondrous fact',
+    type:'fact',
+    fields:[{key:'text',label:'The fact',placeholder:'Something strange and true...',rows:3},{key:'attr',label:'Source (optional)',placeholder:'',rows:1}]
+  },
+  {
+    id:'memory',
+    label:'Memory',
+    icon:'🌙',
+    color:'#c8bfff',
+    colorlo:'rgba(200,191,255,0.1)',
+    desc:'A tiny memory',
+    type:'memory',
+    fields:[{key:'text',label:'The memory',placeholder:'Small, vivid, yours...',rows:3},{key:'attr',label:'When / where (optional)',placeholder:'',rows:1}]
+  },
+];
+
+// ── STATE ──
+const STORE='sel-cabinet';
+let currentIdx=0;
+let autoRotate=true;
+let autoTimer=null;
+let editing=false;
+
+function load(){try{return JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){return{};}}
+function save(d){try{localStorage.setItem(STORE,JSON.stringify(d));}catch(e){}}
+
+// ── BUILD TABS ──
+function buildTabs(){
+  const strip=document.getElementById('tabStrip');
+  strip.innerHTML='';
+  DRAWERS.forEach((d,i)=>{
+    const tab=document.createElement('button');
+    tab.className='tab'+(i===currentIdx?' active':'');
+    tab.textContent=d.icon+' '+d.label;
+    tab.onclick=()=>{currentIdx=i;render();resetAuto();};
+    strip.appendChild(tab);
+  });
+}
+
+// ── BUILD NAV DOTS ──
+function buildDots(){
+  const nav=document.getElementById('footerNav');
+  nav.innerHTML='';
+  DRAWERS.forEach((_,i)=>{
+    const dot=document.createElement('div');
+    dot.className='fnav-dot'+(i===currentIdx?' active':'');
+    dot.onclick=()=>{currentIdx=i;render();resetAuto();};
+    nav.appendChild(dot);
+  });
+}
+
+// ── RENDER ──
+function render(){
+  if(editing) closeEdit();
+  buildTabs();
+  buildDots();
+
+  const drawer=DRAWERS[currentIdx];
+  const data=load();
+  const entry=data[drawer.id]||{};
+
+  // Badge
+  const badge=document.getElementById('typeBadge');
+  badge.textContent=drawer.icon+' '+drawer.desc;
+  badge.style.color=drawer.color;
+  badge.style.borderColor=drawer.color+'40';
+  badge.style.background=drawer.colorlo;
+
+  // Content
+  const wrap=document.getElementById('contentWrap');
+  wrap.classList.add('fade-out');
+
+  setTimeout(()=>{
+    wrap.innerHTML='';
+
+    if(drawer.type==='image'){
+      renderImage(wrap,drawer,entry);
+    } else {
+      renderText(wrap,drawer,entry);
+    }
+
+    wrap.classList.remove('fade-out');
+    wrap.classList.add('fade-in');
+    setTimeout(()=>wrap.classList.remove('fade-in'),500);
+  },250);
+
+  // Auto pip
+  document.getElementById('autoPip').classList.toggle('on',autoRotate);
+}
+
+function renderImage(wrap,drawer,entry){
+  const frame=document.createElement('div');
+  frame.className='img-frame';
+
+  if(entry.url){
+    const img=document.createElement('img');
+    img.src=entry.url;
+    img.alt=entry.caption||'';
+    img.onerror=()=>{frame.innerHTML='<div class="img-placeholder"><div class="img-placeholder-icon">◉</div><div class="img-placeholder-text">Image could not load</div></div>';};
+    frame.appendChild(img);
+  } else {
+    frame.innerHTML=`<div class="img-placeholder"><div class="img-placeholder-icon">◉</div><div class="img-placeholder-text">No image set</div></div>`;
+  }
+  wrap.appendChild(frame);
+
+  // URL bar always visible for images
+  const bar=document.createElement('div');
+  bar.className='img-url-bar';
+  bar.innerHTML=`<input class="img-url-input" id="imgUrlInput" placeholder="Paste image URL..." value="${entry.url||''}"><button class="img-set-btn" onclick="setImage()">Set ✦</button>`;
+  wrap.appendChild(bar);
+
+  if(entry.caption){
+    const cap=document.createElement('div');
+    cap.style.cssText='font-family:\'IM Fell English\',serif;font-style:italic;font-size:11px;color:var(--text3);text-align:center;margin-top:2px;';
+    cap.textContent=entry.caption;
+    wrap.appendChild(cap);
+  }
+
+  // Caption edit
+  const capRow=document.createElement('div');
+  capRow.innerHTML=`<input class="img-url-input" id="imgCapInput" placeholder="Caption (optional)..." value="${entry.caption||''}">`;
+  capRow.style.marginTop='4px';
+  wrap.appendChild(capRow);
+
+  const saveCapBtn=document.createElement('button');
+  saveCapBtn.className='img-set-btn';
+  saveCapBtn.style.marginTop='4px';
+  saveCapBtn.style.width='100%';
+  saveCapBtn.textContent='Save Caption';
+  saveCapBtn.onclick=()=>{
+    const d=load();if(!d.image)d.image={};
+    d.image.caption=document.getElementById('imgCapInput').value.trim();
+    save(d);render();
+  };
+  wrap.appendChild(saveCapBtn);
+}
+
+function setImage(){
+  const url=document.getElementById('imgUrlInput')?.value.trim();
+  if(!url) return;
+  const d=load();if(!d.image)d.image={};
+  d.image.url=url;
+  save(d);render();
+}
+
+function renderText(wrap,drawer,entry){
+  const textEl=document.createElement('div');
+
+  if(entry.text){
+    textEl.className='text-content';
+    textEl.onclick=openEdit;
+
+    const main=document.createElement('div');
+    main.className='main-text '+drawer.type;
+    main.textContent=entry.text;
+    textEl.appendChild(main);
+
+    if(entry.attr){
+      const attr=document.createElement('span');
+      attr.className='attr-text';
+      attr.textContent='— '+entry.attr;
+      textEl.appendChild(attr);
+    }
+
+    const hint=document.createElement('div');
+    hint.style.cssText='font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--text3);margin-top:8px;opacity:0;transition:opacity .2s;';
+    hint.textContent='tap to edit';
+    textEl.appendChild(hint);
+    textEl.onmouseenter=()=>hint.style.opacity='1';
+    textEl.onmouseleave=()=>hint.style.opacity='0';
+  } else {
+    textEl.className='text-content';
+    textEl.onclick=openEdit;
+    const emp=document.createElement('div');
+    emp.className='empty-prompt';
+    emp.textContent=drawer.fields[0].placeholder;
+    textEl.appendChild(emp);
+  }
+
+  wrap.appendChild(textEl);
+}
+
+// ── EDIT ──
+function openEdit(){
+  if(editing) return;
+  editing=true;
+  stopAuto();
+
+  const drawer=DRAWERS[currentIdx];
+  const data=load();
+  const entry=data[drawer.id]||{};
+
+  const ea=document.getElementById('editArea');
+  ea.innerHTML='';
+  ea.classList.add('open');
+
+  // Hide content
+  document.getElementById('contentWrap').style.opacity='0.3';
+
+  drawer.fields.forEach(f=>{
+    const wrap=document.createElement('div');
+    const label=document.createElement('label');
+    label.className='edit-label';
+    label.textContent=f.label;
+    wrap.appendChild(label);
+
+    if(f.rows&&f.rows>1){
+      const ta=document.createElement('textarea');
+      ta.className='edit-input';
+      ta.id='ef_'+f.key;
+      ta.placeholder=f.placeholder;
+      ta.rows=f.rows||2;
+      ta.value=entry[f.key]||'';
+      wrap.appendChild(ta);
+    } else {
+      const inp=document.createElement('input');
+      inp.className='edit-input'+(f.plain?' plain':'');
+      inp.id='ef_'+f.key;
+      inp.placeholder=f.placeholder;
+      inp.value=entry[f.key]||'';
+      inp.type='text';
+      wrap.appendChild(inp);
+    }
+    ea.appendChild(wrap);
+  });
+
+  const btns=document.createElement('div');
+  btns.className='edit-btns';
+  btns.innerHTML=`<button class="ebtn ebtn-cancel" onclick="closeEdit()">Cancel</button><button class="ebtn ebtn-save" onclick="saveEdit()">Save ✦</button>`;
+  ea.appendChild(btns);
+
+  setTimeout(()=>{
+    const first=ea.querySelector('textarea,input');
+    if(first) first.focus();
+  },80);
+}
+
+function closeEdit(){
+  editing=false;
+  document.getElementById('editArea').classList.remove('open');
+  document.getElementById('editArea').innerHTML='';
+  document.getElementById('contentWrap').style.opacity='1';
+  if(autoRotate) startAuto();
+}
+
+function saveEdit(){
+  const drawer=DRAWERS[currentIdx];
+  const d=load();
+  if(!d[drawer.id]) d[drawer.id]={};
+  drawer.fields.forEach(f=>{
+    const el=document.getElementById('ef_'+f.key);
+    if(el) d[drawer.id][f.key]=el.value.trim();
+  });
+  save(d);
+  closeEdit();
+  render();
+}
+
+// ── NAVIGATION ──
+function prev(){currentIdx=(currentIdx-1+DRAWERS.length)%DRAWERS.length;render();resetAuto();}
+function next(){currentIdx=(currentIdx+1)%DRAWERS.length;render();resetAuto();}
+
+// ── AUTO ROTATE ──
+function startAuto(){
+  stopAuto();
+  if(autoRotate) autoTimer=setInterval(()=>{if(!editing){currentIdx=(currentIdx+1)%DRAWERS.length;render();}},14000);
+}
+function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
+function resetAuto(){stopAuto();if(autoRotate)startAuto();}
+function toggleAuto(){
+  autoRotate=!autoRotate;
+  document.getElementById('autoPip').classList.toggle('on',autoRotate);
+  if(autoRotate)startAuto();else stopAuto();
+}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(editing&&e.key==='Escape'){closeEdit();return;}
+  if(!editing){
+    if(e.key==='ArrowRight'||e.key==='ArrowDown') next();
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp') prev();
+  }
+  if(editing&&(e.ctrlKey||e.metaKey)&&e.key==='Enter') saveEdit();
+});
+
+// ── INIT ──
+render();
+startAuto();
+</script>
+</body>
+</html>
