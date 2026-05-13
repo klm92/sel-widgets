@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · The Pulse</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#191919;color:#e8dfc8;
+  font-family:'Josefin Sans',sans-serif;font-weight:300;
+  min-height:100vh;padding:24px 22px 32px;
+  position:relative;overflow:hidden;
+}
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;background:white;border-radius:50%;animation:tw var(--d) ease-in-out infinite var(--dl);}
+@keyframes tw{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.1)}}
+.widget{position:relative;z-index:1;}
+
+/* Header */
+.widget-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:20px;
+}
+.header-left{}
+.widget-title{
+  font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:#6b6585;
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+}
+.widget-title::before{content:'◉';font-size:10px;color:#8b7fd4;}
+.week-label{
+  font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;
+  color:#ddd8f0;letter-spacing:.06em;line-height:1.2;
+}
+.week-dates{
+  font-size:9px;letter-spacing:.25em;text-transform:uppercase;
+  color:#6b6585;margin-top:3px;
+}
+.edit-week-btn{
+  background:rgba(139,127,212,.1);border:1px solid rgba(139,127,212,.2);
+  border-radius:7px;padding:6px 12px;
+  font-family:'Josefin Sans',sans-serif;font-size:9px;
+  letter-spacing:.2em;text-transform:uppercase;color:#8b7fd4;
+  cursor:pointer;transition:all .2s;align-self:flex-start;margin-top:2px;
+}
+.edit-week-btn:hover{background:rgba(139,127,212,.22);}
+
+/* Day strip */
+.day-strip{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:4px;margin-bottom:20px;
+}
+.day-cell{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 3px;border-radius:7px;
+  border:1px solid rgba(255,255,255,.04);
+  background:rgba(255,255,255,.015);
+  transition:all .15s;
+}
+.day-cell.today{
+  background:rgba(139,127,212,.1);
+  border-color:rgba(139,127,212,.25);
+}
+.day-cell.has-data{border-color:rgba(255,255,255,.08);}
+.day-name{font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:#4a4660;}
+.day-num{font-size:13px;font-weight:100;color:#a09ab8;line-height:1;}
+.day-cell.today .day-num{color:#c8bfff;}
+.day-mood{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.08);}
+.day-mood.filled{background:var(--mood-c,#8b7fd4);}
+
+/* Stats grid */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;margin-bottom:16px;
+}
+.stat-card{
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:9px;padding:11px 12px;
+  position:relative;overflow:hidden;
+  cursor:pointer;transition:border-color .2s;
+}
+.stat-card:hover{border-color:rgba(255,255,255,.1);}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:var(--sc,rgba(139,127,212,.3));opacity:.7;
+}
+.stat-label{
+  font-size:8px;letter-spacing:.28em;text-transform:uppercase;
+  color:#4a4660;display:block;margin-bottom:5px;
+}
+.stat-value{
+  font-family:'Josefin Sans',sans-serif;font-size:22px;font-weight:100;
+  color:#ddd8f0;line-height:1;letter-spacing:.02em;
+}
+.stat-unit{font-size:10px;color:#6b6585;margin-left:2px;letter-spacing:.1em;}
+.stat-bar{
+  height:2px;background:rgba(255,255,255,.05);border-radius:2px;
+  margin-top:7px;overflow:hidden;
+}
+.stat-fill{height:100%;border-radius:2px;background:var(--sc,#8b7fd4);transition:width .4s ease;}
+
+/* Wide stat rows */
+.wide-row{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;
+}
+
+/* Song of the week */
+.song-card{
+  background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);
+  border-radius:9px;padding:11px 14px;
+  display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden;
+}
+.song-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,rgba(176,112,144,.4),rgba(139,127,212,.4));
+}
+.song-card:hover{border-color:rgba(255,255,255,.1);}
+.song-icon{font-size:24px;flex-shrink:0;}
+.song-body{flex:1;min-width:0;}
+.song-label{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:#4a4660;display:block;margin-bottom:4px;}
+.song-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;color:#ddd8f0;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.song-artist{font-size:10px;color:#6b6585;letter-spacing:.1em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.song-empty{font-family:'IM Fell English',serif;font-style:italic;font-size:13px;color:#3a3858;}
+
+/* Memory card */
+.memory-card{
+  background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);
+  border-radius:9px;padding:11px 14px;
+  cursor:pointer;transition:border-color .2s;position:relative;overflow:hidden;
+}
+.memory-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,rgba(201,168,76,.3),rgba(90,180,160,.3));
+}
+.memory-card:hover{border-color:rgba(255,255,255,.1);}
+.memory-label{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:#4a4660;display:block;margin-bottom:6px;}
+.memory-text{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:13.5px;font-weight:300;line-height:1.7;color:#a09ab8;letter-spacing:.03em;
+}
+.memory-empty{font-family:'IM Fell English',serif;font-style:italic;font-size:12px;color:#3a3858;line-height:1.7;}
+
+/* Bottom row */
+.bottom-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:12px;margin-top:4px;
+  border-top:1px solid rgba(255,255,255,.04);
+}
+.archive-link{
+  font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:#4a4660;
+  background:none;border:none;cursor:pointer;
+  font-family:'Josefin Sans',sans-serif;
+  display:flex;align-items:center;gap:5px;transition:color .2s;
+}
+.archive-link:hover{color:#c8bfff;}
+.archive-link::after{content:'›';font-size:12px;}
+.week-status{font-size:8px;letter-spacing:.2em;text-transform:uppercase;color:#3a3858;}
+
+/* EDIT MODAL */
+.modal-bd{
+  position:fixed;inset:0;background:rgba(8,8,16,.9);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(4px);overflow-y:auto;
+}
+.modal-bd.open{display:flex;}
+.modal{
+  background:#181628;border:1px solid rgba(139,127,212,.22);
+  border-radius:14px;padding:22px 20px;width:100%;max-width:400px;
+  position:relative;margin:auto;
+}
+.modal::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:1px;background:#8b7fd4;opacity:.4;border-radius:1px;
+}
+.modal-title{
+  font-family:'Cinzel',serif;font-size:13px;letter-spacing:.18em;
+  color:#c0b8d0;margin-bottom:18px;text-align:center;
+}
+.mf{margin-bottom:11px;}
+.ml{font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:#6b6585;display:block;margin-bottom:4px;}
+.mi{
+  width:100%;background:rgba(255,255,255,.035);
+  border:1px solid rgba(139,127,212,.14);border-radius:6px;
+  padding:7px 11px;color:#ddd8f0;font-family:'Josefin Sans',sans-serif;
+  font-size:12px;letter-spacing:.04em;outline:none;transition:border-color .2s;
+}
+.mi:focus{border-color:rgba(139,127,212,.4);}
+.mi::placeholder{color:#3a3858;}
+.mi.tall{min-height:60px;resize:vertical;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;}
+.modal-btns{display:flex;gap:8px;margin-top:14px;}
+.mb{
+  flex:1;padding:8px;border-radius:7px;font-family:'Josefin Sans',sans-serif;
+  font-size:9px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s;
+}
+.mb-s{background:rgba(139,127,212,.18);border:1px solid rgba(139,127,212,.3);color:#c8bfff;}
+.mb-s:hover{background:rgba(139,127,212,.32);}
+.mb-c{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#4a4660;}
+.mb-c:hover{color:#8a8298;}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-header">
+    <div class="header-left">
+      <div class="widget-title">The Pulse</div>
+      <div class="week-label" id="weekLabel"></div>
+      <div class="week-dates" id="weekDates"></div>
+    </div>
+    <button class="edit-week-btn" onclick="openModal()">Log Week ✦</button>
+  </div>
+
+  <!-- Day strip -->
+  <div class="day-strip" id="dayStrip"></div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card" style="--sc:rgba(90,180,160,0.4);" onclick="openModal()">
+      <span class="stat-label">Avg Sleep</span>
+      <div><span class="stat-value" id="statSleep">—</span><span class="stat-unit">hrs</span></div>
+      <div class="stat-bar"><div class="stat-fill" id="barSleep" style="width:0%;background:#5ab4a0;"></div></div>
+    </div>
+    <div class="stat-card" style="--sc:rgba(176,112,144,0.4);" onclick="openModal()">
+      <span class="stat-label">Avg Mood</span>
+      <div><span class="stat-value" id="statMood">—</span><span class="stat-unit">/10</span></div>
+      <div class="stat-bar"><div class="stat-fill" id="barMood" style="width:0%;background:#b07090;"></div></div>
+    </div>
+    <div class="stat-card" style="--sc:rgba(201,168,76,0.4);" onclick="openModal()">
+      <span class="stat-label">Focus Hrs</span>
+      <div><span class="stat-value" id="statFocus">—</span><span class="stat-unit">hrs</span></div>
+      <div class="stat-bar"><div class="stat-fill" id="barFocus" style="width:0%;background:#c9a84c;"></div></div>
+    </div>
+  </div>
+
+  <div class="wide-row">
+    <div class="stat-card" style="--sc:rgba(139,127,212,0.4);" onclick="openModal()">
+      <span class="stat-label">Words Written</span>
+      <div><span class="stat-value" id="statWords">—</span></div>
+      <div class="stat-bar"><div class="stat-fill" id="barWords" style="width:0%;background:#8b7fd4;"></div></div>
+    </div>
+    <div class="stat-card" style="--sc:rgba(106,127,193,0.4);" onclick="openModal()">
+      <span class="stat-label">Vocab Studied</span>
+      <div><span class="stat-value" id="statVocab">—</span><span class="stat-unit">words</span></div>
+      <div class="stat-bar"><div class="stat-fill" id="barVocab" style="width:0%;background:#6a7fc1;"></div></div>
+    </div>
+  </div>
+
+  <!-- Song -->
+  <div class="song-card" onclick="openModal()" style="margin-bottom:8px;">
+    <div class="song-icon">🎵</div>
+    <div class="song-body">
+      <span class="song-label">Top Song of the Week</span>
+      <div class="song-title" id="songTitle"><span class="song-empty">what's been on repeat?</span></div>
+      <div class="song-artist" id="songArtist"></div>
+    </div>
+  </div>
+
+  <!-- Memory -->
+  <div class="memory-card" onclick="openModal()" style="margin-bottom:14px;">
+    <span class="memory-label">Favourite memory this week</span>
+    <div id="memoryText" class="memory-empty">a moment worth keeping —</div>
+  </div>
+
+  <!-- Bottom -->
+  <div class="bottom-row">
+    <span class="week-status" id="weekStatus"></span>
+    <button class="archive-link" onclick="openArchive()">Weekly archive</button>
+  </div>
+</div>
+
+<!-- LOG MODAL -->
+<div class="modal-bd" id="modal">
+  <div class="modal">
+    <div class="modal-title">Log This Week</div>
+
+    <div style="font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:#4a4660;margin-bottom:12px;text-align:center;" id="modalWeekLabel"></div>
+
+    <!-- Daily entries -->
+    <div class="mf">
+      <label class="ml">Daily data (sleep hrs · mood /10 · focus hrs) — one row per day</label>
+      <div id="dailyInputs"></div>
+    </div>
+
+    <div class="form-grid-2" style="margin-bottom:11px;">
+      <div class="mf" style="margin-bottom:0;">
+        <label class="ml">Total words written</label>
+        <input class="mi" id="mWords" type="number" min="0" placeholder="e.g. 3400">
+      </div>
+      <div class="mf" style="margin-bottom:0;">
+        <label class="ml">Vocab words studied</label>
+        <input class="mi" id="mVocab" type="number" min="0" placeholder="e.g. 45">
+      </div>
+    </div>
+
+    <div class="mf">
+      <label class="ml">Top song of the week</label>
+      <input class="mi" id="mSong" placeholder="Song title">
+    </div>
+    <div class="mf">
+      <label class="ml">Artist</label>
+      <input class="mi" id="mArtist" placeholder="Artist name">
+    </div>
+    <div class="mf">
+      <label class="ml">Favourite memory</label>
+      <textarea class="mi tall" id="mMemory" placeholder="A moment, a feeling, something that made this week worth it..."></textarea>
+    </div>
+
+    <div class="modal-btns">
+      <button class="mb mb-c" onclick="closeModal()">Cancel</button>
+      <button class="mb mb-s" onclick="saveWeek()">Save Week ✦</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Stars
+const starsEl=document.getElementById('stars');
+for(let i=0;i<100;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.7+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--dl:${Math.random()*6}s;--op:${0.1+Math.random()*0.42};`;starsEl.appendChild(s);}
+
+const STORE='sel-pulse';
+const ARCHIVE_KEY='sel-pulse-archive-url';
+const DAYS_S=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYS_F=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function getWeekBounds(date){
+  const d=new Date(date);
+  d.setHours(0,0,0,0);
+  const day=d.getDay(); // 0=Sun
+  const sun=new Date(d); sun.setDate(d.getDate()-day);
+  const sat=new Date(sun); sat.setDate(sun.getDate()+6);
+  return{sun,sat};
+}
+
+function weekKey(sun){
+  return`${sun.getFullYear()}-${String(sun.getMonth()+1).padStart(2,'0')}-${String(sun.getDate()).padStart(2,'0')}`;
+}
+
+function fmt(d){return`${MONTHS_S[d.getMonth()]} ${d.getDate()}`;}
+function fmtFull(d){return`${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;}
+
+function load(){try{return JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){return{};}}
+function save(d){try{localStorage.setItem(STORE,JSON.stringify(d));}catch(e){}}
+
+const now=new Date();
+const {sun,sat}=getWeekBounds(now);
+const wk=weekKey(sun);
+
+function buildDayStrip(){
+  const strip=document.getElementById('dayStrip');
+  strip.innerHTML='';
+  const data=load();
+  const wdata=data[wk]||{};
+  const daily=wdata.daily||[];
+  for(let i=0;i<7;i++){
+    const d=new Date(sun); d.setDate(sun.getDate()+i);
+    const isToday=d.toDateString()===now.toDateString();
+    const dayData=daily[i]||{};
+    const hasMood=dayData.mood>0;
+    const moodColor=hasMood?moodColor_(dayData.mood):'';
+    const cell=document.createElement('div');
+    cell.className='day-cell'+(isToday?' today':'')+(dayData.sleep||dayData.mood?' has-data':'');
+    cell.innerHTML=`<span class="day-name">${DAYS_S[i]}</span><span class="day-num">${d.getDate()}</span><div class="day-mood${hasMood?' filled':''}" style="--mood-c:${moodColor}"></div>`;
+    strip.appendChild(cell);
+  }
+}
+
+function moodColor_(m){
+  if(m>=8) return'#5ab4a0';
+  if(m>=6) return'#8b7fd4';
+  if(m>=4) return'#c9a84c';
+  return'#c47a6a';
+}
+
+function avg(arr){if(!arr.length) return null;const v=arr.filter(x=>x!=null&&x!=='');if(!v.length)return null;return v.reduce((a,b)=>a+parseFloat(b),0)/v.length;}
+
+function renderStats(){
+  const data=load();
+  const wdata=data[wk]||{};
+  const daily=wdata.daily||[];
+
+  // Sleep avg
+  const sleeps=daily.map(d=>d.sleep).filter(v=>v);
+  const sleepAvg=avg(sleeps);
+  document.getElementById('statSleep').textContent=sleepAvg!==null?sleepAvg.toFixed(1):'—';
+  document.getElementById('barSleep').style.width=sleepAvg!==null?Math.min((sleepAvg/10)*100,100)+'%':'0%';
+
+  // Mood avg
+  const moods=daily.map(d=>d.mood).filter(v=>v);
+  const moodAvg=avg(moods);
+  document.getElementById('statMood').textContent=moodAvg!==null?moodAvg.toFixed(1):'—';
+  document.getElementById('barMood').style.width=moodAvg!==null?(moodAvg/10)*100+'%':'0%';
+
+  // Focus avg
+  const focuses=daily.map(d=>d.focus).filter(v=>v);
+  const focusAvg=avg(focuses);
+  document.getElementById('statFocus').textContent=focusAvg!==null?focusAvg.toFixed(1):'—';
+  document.getElementById('barFocus').style.width=focusAvg!==null?Math.min((focusAvg/8)*100,100)+'%':'0%';
+
+  // Words
+  const words=wdata.words||'';
+  document.getElementById('statWords').textContent=words?parseInt(words).toLocaleString():'—';
+  document.getElementById('barWords').style.width=words?Math.min((parseInt(words)/5000)*100,100)+'%':'0%';
+
+  // Vocab
+  const vocab=wdata.vocab||'';
+  document.getElementById('statVocab').textContent=vocab||'—';
+  document.getElementById('barVocab').style.width=vocab?Math.min((parseInt(vocab)/100)*100,100)+'%':'0%';
+
+  // Song
+  const song=wdata.song||'';const artist=wdata.artist||'';
+  if(song){
+    document.getElementById('songTitle').innerHTML=`<span style="color:#ddd8f0;">${escHtml(song)}</span>`;
+    document.getElementById('songArtist').textContent=artist;
+  } else {
+    document.getElementById('songTitle').innerHTML=`<span class="song-empty">what's been on repeat?</span>`;
+    document.getElementById('songArtist').textContent='';
+  }
+
+  // Memory
+  const mem=wdata.memory||'';
+  const memEl=document.getElementById('memoryText');
+  if(mem){memEl.className='memory-text';memEl.textContent='\u201c'+mem+'\u201d';}
+  else{memEl.className='memory-empty';memEl.textContent='a moment worth keeping —';}
+
+  // Week status
+  const daysPast=Math.min(Math.floor((now-sun)/86400000)+1,7);
+  document.getElementById('weekStatus').textContent=`${daysPast} of 7 days`;
+}
+
+function renderHeader(){
+  document.getElementById('weekLabel').textContent=`Week of ${fmt(sun)}`;
+  document.getElementById('weekDates').textContent=`${fmt(sun)} — ${fmt(sat)}`;
+}
+
+// BUILD DAILY INPUTS in modal
+function buildDailyInputs(){
+  const data=load();
+  const wdata=data[wk]||{};
+  const daily=wdata.daily||[];
+  const container=document.getElementById('dailyInputs');
+  container.innerHTML='';
+  for(let i=0;i<7;i++){
+    const d=new Date(sun); d.setDate(sun.getDate()+i);
+    const dd=daily[i]||{};
+    const past=d<=now;
+    const row=document.createElement('div');
+    row.style.cssText='display:grid;grid-template-columns:48px 1fr 1fr 1fr;gap:5px;margin-bottom:5px;align-items:center;';
+    row.innerHTML=`
+      <span style="font-size:9px;letter-spacing:.15em;color:${past?'#6b6585':'#3a3858'};text-transform:uppercase;">${DAYS_S[i]}</span>
+      <input class="mi" type="number" min="0" max="24" step="0.5" placeholder="sleep" value="${dd.sleep||''}" id="d_sleep_${i}" ${past?'':'disabled style="opacity:.3;"'}>
+      <input class="mi" type="number" min="1" max="10" step="0.5" placeholder="mood" value="${dd.mood||''}" id="d_mood_${i}" ${past?'':'disabled style="opacity:.3;"'}>
+      <input class="mi" type="number" min="0" max="24" step="0.5" placeholder="focus" value="${dd.focus||''}" id="d_focus_${i}" ${past?'':'disabled style="opacity:.3;"'}>
+    `;
+    container.appendChild(row);
+  }
+}
+
+function openModal(){
+  const data=load();
+  const wdata=data[wk]||{};
+  document.getElementById('mWords').value=wdata.words||'';
+  document.getElementById('mVocab').value=wdata.vocab||'';
+  document.getElementById('mSong').value=wdata.song||'';
+  document.getElementById('mArtist').value=wdata.artist||'';
+  document.getElementById('mMemory').value=wdata.memory||'';
+  document.getElementById('modalWeekLabel').textContent=`${fmtFull(sun)} — ${fmtFull(sat)}`;
+  buildDailyInputs();
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+function saveWeek(){
+  const data=load();
+  if(!data[wk]) data[wk]={};
+  // Collect daily
+  const daily=[];
+  for(let i=0;i<7;i++){
+    daily.push({
+      sleep:document.getElementById(`d_sleep_${i}`)?.value||'',
+      mood:document.getElementById(`d_mood_${i}`)?.value||'',
+      focus:document.getElementById(`d_focus_${i}`)?.value||'',
+    });
+  }
+  data[wk]={
+    ...data[wk],daily,
+    words:document.getElementById('mWords').value,
+    vocab:document.getElementById('mVocab').value,
+    song:document.getElementById('mSong').value.trim(),
+    artist:document.getElementById('mArtist').value.trim(),
+    memory:document.getElementById('mMemory').value.trim(),
+    updated:new Date().toISOString(),
+  };
+  save(data);
+  closeModal();
+  buildDayStrip();
+  renderStats();
+}
+
+function openArchive(){
+  const url=localStorage.getItem(ARCHIVE_KEY);
+  if(url){window.open(url,'_blank');}
+  else{const u=prompt('Paste your weekly archive Notion page URL (saved for future):');if(u){localStorage.setItem(ARCHIVE_KEY,u);window.open(u,'_blank');}}
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+renderHeader();
+buildDayStrip();
+renderStats();
+</script>
+</body>
+</html>
