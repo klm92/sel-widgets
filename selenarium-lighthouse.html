@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · The Lighthouse</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#191919;color:#e8dfc8;
+  font-family:'Josefin Sans',sans-serif;font-weight:300;
+  min-height:100vh;padding:22px 20px 26px;
+  position:relative;overflow:hidden;
+}
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+.star{position:absolute;background:white;border-radius:50%;animation:tw var(--d) ease-in-out infinite var(--dl);}
+@keyframes tw{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.1)}}
+.widget{position:relative;z-index:1;}
+
+/* Header */
+.widget-title{
+  font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:#6b6585;
+  margin-bottom:16px;display:flex;align-items:center;gap:8px;
+}
+.widget-title::before{content:'🕯';font-size:11px;}
+.widget-title::after{content:'';flex:1;height:1px;background:rgba(139,127,212,.15);}
+
+/* Lighthouse SVG beacon */
+.beacon-wrap{
+  display:flex;justify-content:center;margin-bottom:16px;
+  position:relative;
+}
+.beacon-glow{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,0.2) 0%,transparent 70%);
+  animation:pulse-glow 4s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes pulse-glow{
+  0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  50%{opacity:0.6;transform:translate(-50%,-50%) scale(1.2);}
+}
+
+/* Date stamp */
+.date-stamp{
+  text-align:center;margin-bottom:14px;
+}
+.date-main{
+  font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;
+  color:#c0b8d0;letter-spacing:.1em;display:block;
+}
+.date-sub{
+  font-size:8px;letter-spacing:.35em;text-transform:uppercase;
+  color:#4a4660;margin-top:3px;display:block;
+}
+
+/* Display state */
+.display-wrap{
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(139,127,212,.1);
+  border-radius:10px;padding:14px 15px;
+  margin-bottom:12px;min-height:72px;
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;cursor:pointer;transition:border-color .2s;
+}
+.display-wrap:hover{border-color:rgba(139,127,212,.22);}
+.display-wrap::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:1px;background:linear-gradient(90deg,transparent,rgba(139,127,212,.2),transparent);
+}
+.display-text{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:14px;font-weight:300;line-height:1.75;
+  color:#c8c0d8;letter-spacing:.03em;text-align:center;
+}
+.display-empty{
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:12px;color:#3a3858;text-align:center;line-height:1.7;
+}
+.edit-hint{
+  font-size:8px;letter-spacing:.25em;text-transform:uppercase;
+  color:#3a3858;text-align:center;margin-top:6px;
+  transition:color .2s;
+}
+.display-wrap:hover .edit-hint{color:#6b6585;}
+
+/* Edit state */
+.edit-wrap{display:none;margin-bottom:12px;}
+.edit-wrap.open{display:block;}
+.edit-textarea{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(139,127,212,.2);border-radius:8px;
+  padding:11px 13px;color:#ddd8f0;
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:14px;line-height:1.7;letter-spacing:.03em;
+  outline:none;resize:none;min-height:90px;
+  transition:border-color .2s;
+}
+.edit-textarea:focus{border-color:rgba(139,127,212,.4);}
+.edit-textarea::placeholder{color:#3a3858;font-style:italic;}
+.edit-actions{display:flex;gap:7px;margin-top:8px;}
+.btn{
+  flex:1;padding:7px;border-radius:7px;
+  font-family:'Josefin Sans',sans-serif;font-size:9px;
+  letter-spacing:.22em;text-transform:uppercase;
+  cursor:pointer;border:none;transition:all .2s;
+}
+.btn-save{
+  background:rgba(139,127,212,.16);border:1px solid rgba(139,127,212,.28);
+  color:#c8bfff;
+}
+.btn-save:hover{background:rgba(139,127,212,.3);}
+.btn-cancel{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  color:#4a4660;
+}
+.btn-cancel:hover{color:#8a8298;}
+
+/* Archive link */
+.archive-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:10px;border-top:1px solid rgba(255,255,255,.04);
+}
+.archive-label{font-size:8px;letter-spacing:.28em;text-transform:uppercase;color:#3a3858;}
+.archive-link{
+  font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:#6b6585;text-decoration:none;
+  display:flex;align-items:center;gap:5px;
+  cursor:pointer;background:none;border:none;
+  font-family:'Josefin Sans',sans-serif;
+  transition:color .2s;
+}
+.archive-link:hover{color:#c8bfff;}
+.archive-link::after{content:'›';font-size:12px;}
+
+/* History strip */
+.history{margin-top:12px;}
+.history-label{
+  font-size:8px;letter-spacing:.3em;text-transform:uppercase;
+  color:#3a3858;margin-bottom:7px;
+  display:flex;align-items:center;gap:8px;
+}
+.history-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.04);}
+.history-item{
+  display:flex;gap:8px;align-items:baseline;
+  padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);
+}
+.history-item:last-child{border-bottom:none;}
+.h-date{
+  font-size:8px;letter-spacing:.15em;color:#3a3858;
+  min-width:52px;flex-shrink:0;text-transform:uppercase;
+}
+.h-text{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:11px;color:#6b6585;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+</style>
+</head>
+<body>
+<div class="stars" id="stars"></div>
+<div class="widget">
+  <div class="widget-title">The Lighthouse</div>
+
+  <!-- Beacon -->
+  <div class="beacon-wrap">
+    <div class="beacon-glow"></div>
+    <svg viewBox="0 0 70 80" width="70" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Light beams -->
+      <line x1="35" y1="18" x2="8"  y2="5"  stroke="#c9a84c" stroke-width="0.8" opacity="0.3"/>
+      <line x1="35" y1="18" x2="62" y2="5"  stroke="#c9a84c" stroke-width="0.8" opacity="0.3"/>
+      <line x1="35" y1="18" x2="2"  y2="22" stroke="#c9a84c" stroke-width="0.8" opacity="0.2"/>
+      <line x1="35" y1="18" x2="68" y2="22" stroke="#c9a84c" stroke-width="0.8" opacity="0.2"/>
+      <!-- Lantern room glow -->
+      <ellipse cx="35" cy="18" rx="14" ry="8" fill="rgba(201,168,76,0.18)"/>
+      <!-- Lantern room -->
+      <rect x="24" y="14" width="22" height="14" rx="2"
+        fill="#1a1828" stroke="rgba(201,168,76,0.6)" stroke-width="0.8"/>
+      <!-- Flame -->
+      <ellipse cx="35" cy="21" rx="4" ry="5" fill="#c9a84c" opacity="0.35"/>
+      <ellipse cx="35" cy="19" rx="2.5" ry="3.5" fill="#e8c870" opacity="0.55"/>
+      <ellipse cx="35" cy="18" rx="1.2" ry="2" fill="#fff8d0" opacity="0.8"/>
+      <!-- Gallery rail -->
+      <rect x="21" y="28" width="28" height="3" rx="1"
+        fill="#252338" stroke="rgba(200,192,216,0.3)" stroke-width="0.6"/>
+      <!-- Tower body -->
+      <path d="M26 31 L24 70 L46 70 L44 31 Z"
+        fill="#1e1c2e" stroke="rgba(160,150,210,0.3)" stroke-width="0.8"/>
+      <!-- Tower stripes -->
+      <path d="M25.5 40 L44.5 40" stroke="rgba(160,150,210,0.15)" stroke-width="1.5"/>
+      <path d="M25 50 L45 50" stroke="rgba(160,150,210,0.15)" stroke-width="1.5"/>
+      <path d="M24.5 60 L45.5 60" stroke="rgba(160,150,210,0.15)" stroke-width="1.5"/>
+      <!-- Door -->
+      <rect x="31" y="58" width="8" height="12" rx="1"
+        fill="#c9a84c" opacity="0.12" stroke="rgba(201,168,76,0.3)" stroke-width="0.6"/>
+      <!-- Base -->
+      <rect x="20" y="70" width="30" height="4" rx="1"
+        fill="#252338" stroke="rgba(160,150,210,0.2)" stroke-width="0.6"/>
+      <!-- Water line -->
+      <path d="M10 74 Q22 71 35 74 Q48 77 60 74"
+        fill="none" stroke="rgba(160,150,210,0.2)" stroke-width="1"/>
+      <path d="M5 77 Q20 74 35 77 Q50 80 65 77"
+        fill="none" stroke="rgba(160,150,210,0.12)" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <!-- Date -->
+  <div class="date-stamp">
+    <span class="date-main" id="dateMain"></span>
+    <span class="date-sub" id="dateSub"></span>
+  </div>
+
+  <!-- Display -->
+  <div class="display-wrap" id="displayWrap" onclick="openEdit()">
+    <div class="display-text" id="displayText" style="display:none;"></div>
+    <div class="display-empty" id="displayEmpty">
+      light a thought for today —<br>something to carry
+    </div>
+    <div class="edit-hint" id="editHint">tap to write</div>
+  </div>
+
+  <!-- Edit -->
+  <div class="edit-wrap" id="editWrap">
+    <textarea class="edit-textarea" id="editArea"
+      placeholder="An intention, a note to future you, something to sit with today..."></textarea>
+    <div class="edit-actions">
+      <button class="btn btn-cancel" onclick="cancelEdit()">Cancel</button>
+      <button class="btn btn-save" onclick="saveEntry()">Save ✦</button>
+    </div>
+  </div>
+
+  <!-- Archive link -->
+  <div class="archive-row">
+    <span class="archive-label">Noctuary archive</span>
+    <button class="archive-link" id="archiveBtn" onclick="openArchive()">Open</button>
+  </div>
+
+  <!-- Recent history -->
+  <div class="history">
+    <div class="history-label">Recent</div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<script>
+// Stars
+const starsEl=document.getElementById('stars');
+for(let i=0;i<80;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*1.6+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--dl:${Math.random()*6}s;--op:${0.1+Math.random()*0.4};`;starsEl.appendChild(s);}
+
+const STORE='sel-lighthouse';
+const ARCHIVE_KEY='sel-lighthouse-archive-url';
+
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function todayKey(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function load(){try{return JSON.parse(localStorage.getItem(STORE)||'{}');}catch(e){return{};}}
+function save(d){try{localStorage.setItem(STORE,JSON.stringify(d));}catch(e){}}
+
+function updateDate(){
+  const now=new Date();
+  document.getElementById('dateMain').textContent=`${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+  document.getElementById('dateSub').textContent=`${now.getFullYear()} · Day ${String(now.getDate()).padStart(2,'0')}`;
+}
+
+function renderDisplay(){
+  const data=load();
+  const key=todayKey();
+  const entry=data[key];
+  const textEl=document.getElementById('displayText');
+  const emptyEl=document.getElementById('displayEmpty');
+  const hintEl=document.getElementById('editHint');
+  if(entry&&entry.text){
+    textEl.textContent='\u201c'+entry.text+'\u201d';
+    textEl.style.display='block';
+    emptyEl.style.display='none';
+    hintEl.textContent='tap to edit';
+  } else {
+    textEl.style.display='none';
+    emptyEl.style.display='block';
+    hintEl.textContent='tap to write';
+  }
+}
+
+function renderHistory(){
+  const data=load();
+  const list=document.getElementById('historyList');
+  const entries=Object.entries(data)
+    .filter(([k,v])=>k!==todayKey()&&v&&v.text)
+    .sort(([a],[b])=>b.localeCompare(a))
+    .slice(0,4);
+  if(entries.length===0){list.innerHTML='<div style="font-size:10px;color:#3a3858;font-style:italic;padding:4px 0;">No previous entries yet</div>';return;}
+  list.innerHTML=entries.map(([k,v])=>{
+    const d=new Date(k+'T12:00:00');
+    const label=`${MONTHS_S[d.getMonth()]} ${d.getDate()}`;
+    const snippet=v.text.length>45?v.text.substring(0,45)+'…':v.text;
+    return`<div class="history-item"><span class="h-date">${label}</span><span class="h-text">"${snippet}"</span></div>`;
+  }).join('');
+}
+
+function openEdit(){
+  const data=load();
+  const key=todayKey();
+  const entry=data[key];
+  document.getElementById('editArea').value=entry?entry.text:'';
+  document.getElementById('editWrap').classList.add('open');
+  document.getElementById('displayWrap').style.display='none';
+  setTimeout(()=>document.getElementById('editArea').focus(),60);
+}
+
+function cancelEdit(){
+  document.getElementById('editWrap').classList.remove('open');
+  document.getElementById('displayWrap').style.display='flex';
+}
+
+function saveEntry(){
+  const text=document.getElementById('editArea').value.trim();
+  if(!text){cancelEdit();return;}
+  const data=load();
+  const key=todayKey();
+  data[key]={text,saved:new Date().toISOString()};
+  save(data);
+  cancelEdit();
+  renderDisplay();
+  renderHistory();
+}
+
+function openArchive(){
+  const url=localStorage.getItem(ARCHIVE_KEY);
+  if(url){window.open(url,'_blank');}
+  else{
+    const u=prompt('Paste your Noctuary archive page URL (saved for future use):');
+    if(u){localStorage.setItem(ARCHIVE_KEY,u);window.open(u,'_blank');}
+  }
+}
+
+// Ctrl+Enter saves
+document.getElementById('editArea').addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter') saveEntry();
+  if(e.key==='Escape') cancelEdit();
+});
+
+updateDate();
+renderDisplay();
+renderHistory();
+// Refresh date at midnight
+setInterval(()=>{updateDate();renderDisplay();renderHistory();},60000);
+</script>
+</body>
+</html>
