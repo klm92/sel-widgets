@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · The Noctuary</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Cinzel:wght@400;500&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&display=swap');
+
+:root {
+  --bg:       #191919;
+  --panel:    rgba(22,20,34,0.9);
+  --border:   rgba(160,150,210,0.10);
+  --border2:  rgba(160,150,210,0.22);
+  --accent:   #7a6fa8;
+  --accentlo: rgba(122,111,168,0.15);
+  --accentgl: rgba(122,111,168,0.30);
+  --gold:     #c9a84c;
+  --goldlo:   rgba(201,168,76,0.18);
+  --moon:     #e8e0d0;
+  --silver:   #c0b8d0;
+  --text:     #c8c0d8;
+  --text2:    #8a8298;
+  --text3:    #4a4660;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 0 0 48px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── STARFIELD ── */
+.starfield { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+.s { position:absolute; background:white; border-radius:50%; animation:tw var(--d) ease-in-out infinite var(--dl); }
+@keyframes tw { 0%,100%{opacity:var(--op)} 50%{opacity:calc(var(--op)*0.1)} }
+
+/* ── HEADER BANNER ── */
+.banner {
+  position: relative; z-index: 1;
+  padding: 36px 28px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(30,26,50,0.7) 0%, transparent 100%);
+}
+
+.back-link {
+  position: absolute; top: 20px; left: 20px;
+  font-size: 9px; letter-spacing: .35em; text-transform: uppercase;
+  color: var(--text3); text-decoration: none;
+  display: flex; align-items: center; gap: 6px;
+  transition: color .2s; border: none; background: none; cursor: pointer;
+  font-family: 'Josefin Sans', sans-serif;
+}
+.back-link:hover { color: var(--silver); }
+.back-link::before { content: '‹'; font-size: 14px; }
+
+.banner-icon {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 1px solid rgba(122,111,168,0.25);
+  background: rgba(122,111,168,0.08);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+
+.banner-title-pre {
+  font-family: 'IM Fell English', serif;
+  font-style: italic; font-size: 11px;
+  color: var(--text3); letter-spacing: .15em;
+  display: block; margin-bottom: 5px;
+}
+.banner-title {
+  font-family: 'Cinzel', serif;
+  font-size: 26px; font-weight: 400;
+  letter-spacing: .22em; color: var(--moon);
+  text-shadow: 0 0 40px rgba(122,111,168,0.3);
+  line-height: 1;
+}
+.banner-tagline {
+  font-family: 'IM Fell English', serif;
+  font-style: italic; font-size: 12.5px;
+  color: var(--text3); margin-top: 8px;
+  letter-spacing: .04em; max-width: 340px;
+  line-height: 1.7;
+}
+
+.ornate-div {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0 0; width: 100%; max-width: 320px;
+}
+.ornate-div .line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(160,150,210,0.18), transparent);
+}
+.ornate-div .gem { color: var(--text3); font-size: 8px; }
+
+/* ── BODY ── */
+.body { position: relative; z-index: 1; padding: 24px 20px; }
+
+/* ── SECTION GROUP ── */
+.section-group { margin-bottom: 28px; }
+
+.section-label {
+  font-size: 9px; letter-spacing: .42em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.section-label-icon { color: var(--accent); font-size: 10px; }
+
+/* ── LINK CARDS GRID ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+/* ── LINK CARD ── */
+.link-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 13px 11px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex; flex-direction: column; gap: 6px;
+  overflow: hidden;
+  transition: transform .25s cubic-bezier(.23,1,.32,1), border-color .25s, box-shadow .25s;
+  min-height: 80px;
+}
+.link-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: var(--accent); opacity: 0; transition: opacity .25s;
+}
+.link-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border2);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35), 0 0 14px rgba(122,111,168,0.1);
+}
+.link-card:hover::before { opacity: 0.7; }
+
+.card-icon { font-size: 15px; line-height: 1; }
+.card-title {
+  font-size: 11px; color: var(--silver);
+  letter-spacing: .06em; line-height: 1.35;
+  font-weight: 300;
+  word-break: break-word;
+}
+.card-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic; font-size: 9.5px;
+  color: var(--text3); line-height: 1.4;
+}
+
+/* Delete button on card -->
+.card-del {
+  position: absolute; top: 6px; right: 7px;
+  background: none; border: none;
+  color: var(--text3); font-size: 13px;
+  cursor: pointer; opacity: 0; transition: opacity .15s, color .15s;
+  line-height: 1; padding: 0;
+}
+.link-card:hover .card-del { opacity: 1; }
+.card-del:hover { color: #c47a6a; }
+
+/* ── ADD CARD BUTTON ── */
+.add-card {
+  background: rgba(255,255,255,0.015);
+  border: 1px dashed rgba(160,150,210,0.18);
+  border-radius: 10px;
+  padding: 13px;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px; min-height: 80px;
+  transition: all .2s;
+  color: var(--text3);
+}
+.add-card:hover {
+  border-color: rgba(160,150,210,0.4);
+  background: rgba(122,111,168,0.06);
+  color: var(--silver);
+}
+.add-card-icon { font-size: 18px; line-height: 1; }
+.add-card-label {
+  font-size: 8px; letter-spacing: .3em;
+  text-transform: uppercase;
+}
+
+/* ── MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(10,9,20,0.88);
+  z-index: 100;
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.open { display: flex; }
+
+.modal {
+  background: #1a1828;
+  border: 1px solid rgba(160,150,210,0.22);
+  border-radius: 14px;
+  padding: 24px 22px;
+  width: 100%; max-width: 340px;
+  position: relative;
+}
+.modal::before {
+  content: ''; position: absolute; top: 0; left: 20%; right: 20%;
+  height: 1px; background: var(--accent); opacity: .5; border-radius: 1px;
+}
+
+.modal-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px; letter-spacing: .2em;
+  color: var(--silver); margin-bottom: 18px; text-align: center;
+}
+
+.field { margin-bottom: 13px; }
+.field-label {
+  font-size: 8px; letter-spacing: .32em; text-transform: uppercase;
+  color: var(--text3); display: block; margin-bottom: 5px;
+}
+.field-input {
+  width: 100%;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(160,150,210,0.14);
+  border-radius: 7px;
+  padding: 8px 11px;
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 12px; letter-spacing: .04em;
+  outline: none; transition: border-color .2s;
+}
+.field-input:focus { border-color: rgba(122,111,168,0.45); }
+.field-input::placeholder { color: var(--text3); }
+.field-input.tall { min-height: 52px; resize: vertical; }
+
+.icon-grid {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 13px;
+}
+.icon-btn {
+  font-size: 17px; padding: 4px 6px;
+  border-radius: 6px; border: 1px solid transparent;
+  cursor: pointer; opacity: .45; transition: all .15s;
+  background: none;
+}
+.icon-btn:hover, .icon-btn.active {
+  opacity: 1;
+  border-color: rgba(122,111,168,0.35);
+  background: rgba(122,111,168,0.1);
+}
+
+.modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+.btn {
+  flex: 1; padding: 9px; border-radius: 8px;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
+  cursor: pointer; border: none; transition: all .2s;
+}
+.btn-save {
+  background: rgba(122,111,168,0.2);
+  border: 1px solid rgba(122,111,168,0.3);
+  color: #c8c0f0;
+}
+.btn-save:hover { background: rgba(122,111,168,0.38); }
+.btn-cancel {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: var(--text3);
+}
+.btn-cancel:hover { background: rgba(255,255,255,0.08); color: var(--silver); }
+
+/* ── BACK TO SELENARIUM btn ── */
+.selenarium-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 8px 20px 0;
+  padding: 11px 16px;
+  background: rgba(122,111,168,0.08);
+  border: 1px solid rgba(122,111,168,0.16);
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .2s;
+  position: relative; z-index: 1;
+}
+.selenarium-btn:hover {
+  background: rgba(122,111,168,0.16);
+  border-color: rgba(122,111,168,0.3);
+}
+.selenarium-btn-icon { font-size: 14px; }
+.selenarium-btn-text {
+  font-size: 9px; letter-spacing: .35em; text-transform: uppercase;
+  color: var(--text3);
+}
+.selenarium-btn:hover .selenarium-btn-text { color: var(--silver); }
+</style>
+</head>
+<body>
+
+<div class="starfield" id="sf"></div>
+
+<!-- HEADER -->
+<div class="banner">
+  <button class="back-link" onclick="goBack()">Selenarium</button>
+
+  <div class="banner-icon">
+    <svg viewBox="0 0 40 40" width="30" height="30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 8 Q6 5 9 5 L20 5 L20 35 H9 Q6 35 6 32 Z" stroke="rgba(160,150,210,0.7)" stroke-width="1.2" fill="rgba(122,111,168,0.08)"/>
+      <path d="M34 8 Q34 5 31 5 L20 5 L20 35 H31 Q34 35 34 32 Z" stroke="rgba(160,150,210,0.7)" stroke-width="1.2" fill="rgba(122,111,168,0.06)"/>
+      <path d="M20 5 L20 35" stroke="rgba(160,150,210,0.4)" stroke-width="0.8"/>
+      <path d="M9 14 Q14 11 19 14" stroke="rgba(200,192,220,0.5)" stroke-width="0.8" fill="none"/>
+      <circle cx="28" cy="13" r="2" fill="rgba(200,192,220,0.4)"/>
+      <circle cx="26" cy="18" r="1.2" fill="rgba(200,192,220,0.3)"/>
+    </svg>
+  </div>
+
+  <span class="banner-title-pre">The</span>
+  <h1 class="banner-title">Noctuary</h1>
+  <p class="banner-tagline">Private reflections, memories, daily logs,<br>and the records of becoming</p>
+
+  <div class="ornate-div">
+    <div class="line"></div>
+    <span class="gem">◆</span>
+    <div class="line"></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body" id="bodyEl"></div>
+
+<!-- Back to Selenarium -->
+<a class="selenarium-btn" id="mainDashLink" href="#" onclick="goBack()">
+  <span class="selenarium-btn-icon">✦</span>
+  <span class="selenarium-btn-text">Return to the Selenarium</span>
+</a>
+
+<!-- ADD LINK MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-title">Add a Page Link</div>
+
+    <div class="field">
+      <label class="field-label">Page title</label>
+      <input class="field-input" id="mTitle" type="text" placeholder="e.g. Journal — May 12, 2026">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Notion page URL</label>
+      <input class="field-input" id="mUrl" type="url" placeholder="https://notion.so/...">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Subtitle / note (optional)</label>
+      <input class="field-input" id="mSub" type="text" placeholder="e.g. evening entry · reflective">
+    </div>
+
+    <div class="field">
+      <label class="field-label">Icon</label>
+      <div class="icon-grid" id="iconGrid"></div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-save" onclick="saveLink()">Add Link ✦</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ──
+const sf = document.getElementById('sf');
+for (let i = 0; i < 110; i++) {
+  const s = document.createElement('div'); s.className = 's';
+  const sz = Math.random() * 1.7 + 0.3;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*7}s;--op:${0.1+Math.random()*0.45};`;
+  sf.appendChild(s);
+}
+
+// ── SECTION DEFINITIONS ──
+// Each section has an id, label, icon, and placeholder links
+const SECTIONS = [
+  {
+    id: 'daily',
+    label: 'Daily Notes',
+    icon: '🗓',
+    desc: 'Daily pages, logs, and records',
+    defaultLinks: [],
+  },
+  {
+    id: 'journal',
+    label: 'Journal',
+    icon: '◎',
+    desc: 'Inner life, moods, and private entries',
+    defaultLinks: [],
+  },
+  {
+    id: 'braindump',
+    label: 'Braindumps',
+    icon: '⚡',
+    desc: 'Unfiltered capture and stream of thought',
+    defaultLinks: [],
+  },
+  {
+    id: 'memory',
+    label: 'Memory & Letters',
+    icon: '🌙',
+    desc: 'Letters, memories, and the past kept close',
+    defaultLinks: [],
+  },
+  {
+    id: 'dream',
+    label: 'Dream Journal',
+    icon: '◈',
+    desc: 'Dream records, symbols, and interpretations',
+    defaultLinks: [],
+  },
+  {
+    id: 'gratitude',
+    label: 'Gratitude',
+    icon: '✦',
+    desc: 'Gratitude practice and what is going well',
+    defaultLinks: [],
+  },
+];
+
+const ICONS = [
+  '🌙','◎','✦','◈','⚡','🗓','📝','🌿','💫','🕯','📖',
+  '🌊','🌸','🍂','❄️','🌑','◐','◉','⭐','🌷','🪐','🔮',
+  '🌫','🫧','🌌','🩶','💜','🤍','✉️','🗝'
+];
+
+let currentSection = null;
+let selectedIcon = ICONS[0];
+
+// ── STORAGE ──
+const STORE_KEY = 'sel-noctuary';
+const DASH_KEY  = 'sel-dashboard-url';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveData(d) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(d)); } catch(e) {}
+}
+
+// ── BACK NAVIGATION ──
+function goBack() {
+  const url = localStorage.getItem(DASH_KEY);
+  if (url) { window.open(url, '_blank'); }
+  else {
+    const u = prompt('Paste your Selenarium dashboard URL (saved for future use):');
+    if (u) { localStorage.setItem(DASH_KEY, u); window.open(u, '_blank'); }
+  }
+}
+
+// ── RENDER ──
+function render() {
+  const data = loadData();
+  const body = document.getElementById('bodyEl');
+  body.innerHTML = '';
+
+  SECTIONS.forEach(sec => {
+    const links = data[sec.id] || [];
+
+    const group = document.createElement('div');
+    group.className = 'section-group';
+
+    // Label
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.innerHTML = `<span class="section-label-icon">${sec.icon}</span>${sec.label}`;
+    group.appendChild(label);
+
+    // Grid
+    const grid = document.createElement('div');
+    grid.className = 'cards-grid';
+
+    // Existing link cards
+    links.forEach((lk, i) => {
+      const card = document.createElement('a');
+      card.className = 'link-card';
+      card.href = lk.url || '#';
+      card.target = '_blank';
+      card.rel = 'noopener';
+      card.innerHTML = `
+        <button class="card-del" title="Remove" onclick="removeLink(event,'${sec.id}',${i})">×</button>
+        <div class="card-icon">${lk.icon || '✦'}</div>
+        <div class="card-title">${escHtml(lk.title)}</div>
+        ${lk.sub ? `<div class="card-sub">${escHtml(lk.sub)}</div>` : ''}
+      `;
+      grid.appendChild(card);
+    });
+
+    // Add button
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-card';
+    addBtn.innerHTML = `<div class="add-card-icon">+</div><div class="add-card-label">Add page</div>`;
+    addBtn.onclick = () => openModal(sec.id);
+    grid.appendChild(addBtn);
+
+    group.appendChild(grid);
+    body.appendChild(group);
+  });
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── REMOVE LINK ──
+function removeLink(e, sectionId, idx) {
+  e.preventDefault(); e.stopPropagation();
+  const data = loadData();
+  if (!data[sectionId]) return;
+  data[sectionId].splice(idx, 1);
+  saveData(data);
+  render();
+}
+
+// ── MODAL ──
+let pendingSection = null;
+
+function openModal(sectionId) {
+  pendingSection = sectionId;
+  selectedIcon = ICONS[0];
+  document.getElementById('mTitle').value = '';
+  document.getElementById('mUrl').value = '';
+  document.getElementById('mSub').value = '';
+  buildIconGrid();
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('mTitle').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  pendingSection = null;
+}
+
+function buildIconGrid() {
+  const grid = document.getElementById('iconGrid');
+  grid.innerHTML = '';
+  ICONS.forEach(ic => {
+    const btn = document.createElement('button');
+    btn.className = 'icon-btn' + (ic === selectedIcon ? ' active' : '');
+    btn.textContent = ic;
+    btn.type = 'button';
+    btn.onclick = () => {
+      selectedIcon = ic;
+      document.querySelectorAll('.icon-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function saveLink() {
+  const title = document.getElementById('mTitle').value.trim();
+  const url   = document.getElementById('mUrl').value.trim();
+  if (!title) { document.getElementById('mTitle').focus(); return; }
+  if (!url)   { document.getElementById('mUrl').focus(); return; }
+
+  const data = loadData();
+  if (!data[pendingSection]) data[pendingSection] = [];
+  data[pendingSection].push({
+    title,
+    url,
+    sub:  document.getElementById('mSub').value.trim(),
+    icon: selectedIcon,
+    added: new Date().toISOString(),
+  });
+  saveData(data);
+  closeModal();
+  render();
+}
+
+// Close modal on backdrop click
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Enter key saves
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modal').classList.contains('open')) {
+    saveLink();
+  }
+});
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>
