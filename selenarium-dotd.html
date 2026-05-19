@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · Drug of the Day</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg:#191919; --panel:rgba(14,22,16,0.97);
+  --teal:#5ab4a0; --tealhi:#7dd4c0; --teallo:rgba(90,180,160,0.12);
+  --gold:#c9a84c; --goldlo:rgba(201,168,76,0.15);
+  --moon:#e8f0ec; --silver:#c8d8d0; --text:#d8e8e0;
+  --text2:#9ab8b0; --text3:#506860; --text4:#304840;
+  --rx:#4a9878; --rxlo:rgba(74,152,120,0.1);
+  --warn:#c47a6a; --warnlo:rgba(196,122,106,0.12);
+  --pearl:#dde8e4;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Josefin Sans',sans-serif;font-weight:300;min-height:100vh;padding:18px 18px 24px;position:relative;overflow:hidden;}
+
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.s{position:absolute;background:white;border-radius:50%;animation:tw var(--d) ease-in-out infinite var(--dl);}
+@keyframes tw{0%,100%{opacity:var(--op)}50%{opacity:calc(var(--op)*0.1)}}
+
+.widget{position:relative;z-index:1;}
+
+/* ── HEADER ── */
+.widget-title{font-size:9px;letter-spacing:.45em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.widget-title::before{content:'💊';font-size:11px;}
+.widget-title::after{content:'';flex:1;height:1px;background:rgba(90,180,160,.15);}
+
+/* ── PRESCRIPTION CARD ── */
+.rx-card{
+  background:var(--panel);
+  border:1px solid rgba(90,180,160,0.18);
+  border-radius:10px;
+  overflow:hidden;
+  position:relative;
+}
+/* Top label tape */
+.rx-tape{
+  background:rgba(74,152,120,0.12);
+  border-bottom:1px solid rgba(90,180,160,0.2);
+  padding:10px 16px 9px;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  position:relative;
+}
+.rx-tape::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(90,180,160,0.35),transparent);}
+.rx-name-block{}
+.rx-class{font-size:8px;letter-spacing:.35em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:3px;}
+.rx-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;letter-spacing:.08em;color:var(--moon);line-height:1;}
+.rx-generic{font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:var(--text3);margin-top:3px;display:block;}
+.rx-badge{
+  display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  flex-shrink:0;margin-left:10px;
+}
+.rx-badge-pill{
+  font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;border:1px solid;white-space:nowrap;
+}
+.rx-badge-pill.class{border-color:rgba(90,180,160,0.3);color:var(--teal);background:rgba(90,180,160,0.08);}
+.rx-badge-pill.reversal{border-color:rgba(201,168,76,0.3);color:var(--gold);background:rgba(201,168,76,0.08);}
+.rx-badge-pill.schedule{border-color:rgba(196,122,106,0.3);color:var(--warn);background:rgba(196,122,106,0.08);}
+
+/* Body */
+.rx-body{padding:12px 16px;}
+
+/* Grid fields */
+.rx-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.rx-field{padding:8px 10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:7px;}
+.rx-field.full{grid-column:1/-1;}
+.rx-field-label{font-size:7.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:4px;}
+.rx-field-val{font-size:11.5px;color:var(--silver);letter-spacing:.04em;line-height:1.55;}
+.rx-field-val.mono{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--tealhi);}
+
+/* Divider */
+.rx-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(90,180,160,0.15),transparent);margin:10px 0;}
+
+/* Warning row */
+.rx-warn-row{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--warnlo);border:1px solid rgba(196,122,106,0.14);border-radius:7px;margin-bottom:10px;}
+.rx-warn-icon{font-size:13px;flex-shrink:0;margin-top:1px;}
+.rx-warn-body{}
+.rx-warn-label{font-size:7.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--warn);display:block;margin-bottom:3px;}
+.rx-warn-text{font-size:11px;color:rgba(220,180,170,0.85);letter-spacing:.04em;line-height:1.55;}
+
+/* Monitor row */
+.rx-monitor-row{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:rgba(74,152,120,0.06);border:1px solid rgba(90,180,160,0.12);border-radius:7px;margin-bottom:10px;}
+.rx-monitor-icon{font-size:13px;flex-shrink:0;margin-top:1px;}
+.rx-monitor-label{font-size:7.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--teal);display:block;margin-bottom:3px;}
+.rx-monitor-text{font-size:11px;color:var(--text2);letter-spacing:.04em;line-height:1.55;}
+
+/* Pearl */
+.rx-pearl{
+  padding:10px 12px;
+  background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.16);
+  border-radius:7px;margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.rx-pearl::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.3),transparent);}
+.rx-pearl-label{font-size:7.5px;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:5px;}
+.rx-pearl-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13.5px;font-weight:300;color:#d8c898;line-height:1.7;letter-spacing:.03em;}
+
+/* Footer nav */
+.rx-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;border-top:1px solid rgba(90,180,160,0.1);
+  background:rgba(0,0,0,0.2);
+}
+.rx-counter{font-size:8px;letter-spacing:.25em;text-transform:uppercase;color:var(--text4);}
+.rx-nav{display:flex;gap:6px;align-items:center;}
+.rx-nav-btn{background:rgba(90,180,160,0.1);border:1px solid rgba(90,180,160,0.2);border-radius:6px;padding:4px 12px;color:var(--teal);font-family:'Josefin Sans',sans-serif;font-size:9px;letter-spacing:.2em;cursor:pointer;transition:all .2s;}
+.rx-nav-btn:hover{background:rgba(90,180,160,0.22);}
+.rx-auto-pip{width:20px;height:10px;border-radius:6px;background:rgba(90,180,160,0.1);border:1px solid rgba(90,180,160,0.2);position:relative;cursor:pointer;transition:all .25s;}
+.rx-auto-pip.on{background:rgba(90,180,160,0.28);border-color:rgba(90,180,160,0.45);}
+.rx-auto-pip::after{content:'';position:absolute;top:1.5px;left:1.5px;width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.4;transition:all .25s;}
+.rx-auto-pip.on::after{left:11px;opacity:1;}
+
+/* Transition */
+.rx-card.fade-out{opacity:0;transform:translateY(4px);transition:opacity .35s,transform .35s;}
+.rx-card.fade-in{opacity:1;transform:translateY(0);transition:opacity .35s,transform .35s;}
+</style>
+</head>
+<body>
+<div class="stars" id="sf"></div>
+<div class="widget">
+  <div class="widget-title">Drug of the Day</div>
+  <div class="rx-card fade-in" id="rxCard">
+    <div class="rx-tape">
+      <div class="rx-name-block">
+        <span class="rx-class" id="rxClass"></span>
+        <div class="rx-name" id="rxName"></div>
+        <span class="rx-generic" id="rxGeneric"></span>
+      </div>
+      <div class="rx-badge" id="rxBadge"></div>
+    </div>
+    <div class="rx-body">
+      <div class="rx-grid" id="rxGrid"></div>
+      <div class="rx-divider"></div>
+      <div class="rx-warn-row" id="rxWarn">
+        <div class="rx-warn-icon">⚠</div>
+        <div class="rx-warn-body">
+          <span class="rx-warn-label">Contraindications</span>
+          <div class="rx-warn-text" id="rxContra"></div>
+        </div>
+      </div>
+      <div class="rx-monitor-row">
+        <div class="rx-monitor-icon">◎</div>
+        <div>
+          <span class="rx-monitor-label">Monitor For</span>
+          <div class="rx-monitor-text" id="rxMonitor"></div>
+        </div>
+      </div>
+      <div class="rx-pearl">
+        <span class="rx-pearl-label">Clinical Pearl</span>
+        <div class="rx-pearl-text" id="rxPearl"></div>
+      </div>
+    </div>
+    <div class="rx-footer">
+      <span class="rx-counter" id="rxCounter"></span>
+      <div class="rx-nav">
+        <div class="rx-auto-pip" id="autoPip" onclick="toggleAuto()" title="Auto-rotate"></div>
+        <button class="rx-nav-btn" onclick="prev()">‹</button>
+        <button class="rx-nav-btn" onclick="next()">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const sf=document.getElementById('sf');
+for(let i=0;i<80;i++){const s=document.createElement('div');s.className='s';const sz=Math.random()*1.6+0.3;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--dl:${Math.random()*6}s;--op:${0.07+Math.random()*0.35};`;sf.appendChild(s);}
+
+const DRUGS=[
+  {
+    name:'Dexmedetomidine',generic:'dexmedetomidine HCl',drugClass:'Alpha-2 Adrenergic Agonist',
+    badges:[{label:'α2 Agonist',type:'class'},{label:'Reversal: Atipamezole',type:'reversal'}],
+    uses:'Sedation, premedication, analgesia adjunct, CRI sedation during procedures',
+    concentration:'0.5 mg/mL (500 mcg/mL)',
+    routes:'IM · IV · CRI',
+    dose:'Dog: 5–20 mcg/kg IM · Cat: 10–40 mcg/kg IM · CRI: 0.5–3 mcg/kg/hr',
+    contra:'Known cardiac disease (HCM in cats), hypotension, severe hepatic/renal disease, patients in shock',
+    monitor:'HR (bradycardia expected), BP (vasoconstriction → hypertension then hypotension), MM color, respiratory rate, sedation depth',
+    pearl:'"Slow heart rate does not always mean inadequate sedation — expect bradycardia as a normal pharmacological effect. Treat the patient, not the number."'
+  },
+  {
+    name:'Ketamine',generic:'ketamine HCl',drugClass:'NMDA Receptor Antagonist / Dissociative',
+    badges:[{label:'Dissociative',type:'class'},{label:'C-III Controlled',type:'schedule'}],
+    uses:'Induction agent, analgesia (subanesthetic CRI), adjunct to sedation protocols',
+    concentration:'100 mg/mL (standard) · 10 mg/mL (diluted for CRI)',
+    routes:'IM · IV · CRI',
+    dose:'Induction: 5–10 mg/kg IM / 1–2 mg/kg IV · Analgesia CRI: 0.2–0.6 mg/kg/hr dog · 0.1–0.5 mg/kg/hr cat',
+    contra:'Raised intracranial pressure, hypertrophic cardiomyopathy (cats — use cautiously), uncontrolled hypertension, seizure history',
+    monitor:'HR (tachycardia common), BP (sympathomimetic — can raise BP), emergence reactions, muscle rigidity, laryngospasm in cats',
+    pearl:'"Ketamine maintains airway reflexes and bronchodilates — but in cats, always have atropine ready. And never give ketamine alone; pair with a sedative or it will not go well for anyone."'
+  },
+  {
+    name:'Hydromorphone',generic:'hydromorphone HCl',drugClass:'Pure Mu-Opioid Agonist',
+    badges:[{label:'Opioid',type:'class'},{label:'Reversal: Naloxone',type:'reversal'},{label:'C-II Controlled',type:'schedule'}],
+    uses:'Moderate to severe pain management, premedication, post-operative analgesia',
+    concentration:'2 mg/mL · 10 mg/mL',
+    routes:'IM · IV (slow) · SQ',
+    dose:'Dog: 0.1–0.2 mg/kg IM/SQ · Cat: 0.05–0.1 mg/kg IM (hyperthermia risk) · IV: 0.05–0.1 mg/kg slow bolus',
+    contra:'Severe respiratory depression, head trauma (raises ICP), administer cautiously with other CNS depressants',
+    monitor:'Respiratory rate and depth, SpO₂, HR (bradycardia), nausea/vomiting, hyperthermia in cats (monitor temp closely)',
+    pearl:'"Cats and hydromorphone are complicated — panting, hyperthermia, and dysphoria can occur. Monitor temperature every 15 minutes post-administration and be prepared to intervene."'
+  },
+  {
+    name:'Propofol',generic:'propofol',drugClass:'Alkylphenol IV Anesthetic',
+    badges:[{label:'IV Induction',type:'class'}],
+    uses:'IV induction of anesthesia, TIVA (total IV anesthesia), seizure management',
+    concentration:'10 mg/mL (1%)',
+    routes:'IV only (slow bolus or CRI)',
+    dose:'Induction: 4–6 mg/kg IV unpremedicated · 2–4 mg/kg IV premedicated · titrate to effect · TIVA CRI: 0.1–0.4 mg/kg/min',
+    contra:'Egg/soy allergy (contains these excipients), use extreme caution in cats (Heinz body anemia risk with repeated dosing), severe cardiovascular compromise',
+    monitor:'Apnea (very common — always have intubation ready), BP (vasodilator, hypotension), SpO₂, HR, injection pain',
+    pearl:'"Propofol is not a one-size-fits-all dose. Always titrate to effect. Push too fast and you will cause apnea. Have your ET tube in your hand before you push."'
+  },
+  {
+    name:'Buprenorphine',generic:'buprenorphine HCl',drugClass:'Partial Mu-Opioid Agonist',
+    badges:[{label:'Opioid (Partial)',type:'class'},{label:'C-III Controlled',type:'schedule'}],
+    uses:'Mild to moderate pain, premedication, post-op analgesia, OTM in cats',
+    concentration:'0.3 mg/mL (standard) · 1.8 mg/mL (Simbadol — feline labeled)',
+    routes:'IM · IV · SQ · OTM (oral transmucosal — cats only)',
+    dose:'Dog/Cat: 0.01–0.02 mg/kg IM/IV/SQ q6–8h · OTM cat: 0.01–0.02 mg/kg q6–12h · Simbadol cat: 0.24 mg/kg SQ q24h',
+    contra:'Ceiling effect limits analgesia — not appropriate for severe pain. May precipitate withdrawal if given to patients already on full mu-agonists.',
+    monitor:'Respiratory rate (mild depression), sedation level, pain reassessment at 30–60 mins post-administration, HR',
+    pearl:'"In cats, OTM (oral transmucosal) buprenorphine is absorbed through the highly alkaline feline oral mucosa — it actually works. Rub it inside the cheek, not on the tongue."'
+  },
+  {
+    name:'Atipamezole',generic:'atipamezole HCl',drugClass:'Alpha-2 Adrenergic Antagonist (Reversal)',
+    badges:[{label:'α2 Reversal',type:'reversal'}],
+    uses:'Reversal of medetomidine and dexmedetomidine sedation',
+    concentration:'5 mg/mL',
+    routes:'IM (preferred) · IV (cautiously — can cause hypotension)',
+    dose:'5× the dexmedetomidine dose in mcg/kg, given as mg/kg atipamezole · Equal volume to dexmedetomidine given IM · Dog/cat: typically 0.1–0.2 mg/kg IM',
+    contra:'Do not use IV unless emergency — can cause profound hypotension. Do not use if opioid reversal is also needed (use naloxone separately).',
+    monitor:'Arousal (within 5–15 min IM), HR normalization (↑ HR expected), BP recovery, re-sedation within 30–60 min possible if large dex dose given',
+    pearl:'"Atipamezole has a shorter half-life than dexmedetomidine in some patients — re-sedation can occur. Keep patients monitored for at least 60 minutes post-reversal and do not discharge too quickly."'
+  },
+  {
+    name:'Maropitant',generic:'maropitant citrate (Cerenia)',drugClass:'NK1 Receptor Antagonist / Antiemetic',
+    badges:[{label:'Antiemetic',type:'class'}],
+    uses:'Prevention and treatment of vomiting, motion sickness, visceral pain adjunct (off-label analgesia)',
+    concentration:'10 mg/mL (injectable) · 16/24/60/160 mg tablets',
+    routes:'SQ · IV (slow, over 1–2 min) · PO',
+    dose:'Dog: 1 mg/kg SQ/IV q24h · 2 mg/kg PO q24h · Cat: 1 mg/kg SQ/IV q24h · Pre-anesthetic: give 1–2 hrs before opioids if vomiting is expected',
+    contra:'Refrigerate injectable — subcutaneous injection of cold maropitant is very painful; warm to room temp first. Use caution in severe hepatic disease.',
+    monitor:'Pain on injection (SQ — sting is common), liver values with long-term use, efficacy of vomiting control',
+    pearl:'"Always warm the injectable maropitant before giving it SQ. Cold maropitant injections are notoriously painful and patients will let you know. Pull it from the fridge 15 minutes before you need it."'
+  },
+  {
+    name:'Meloxicam',generic:'meloxicam (Metacam)',drugClass:'COX-2 Preferential NSAID',
+    badges:[{label:'NSAID',type:'class'}],
+    uses:'Acute and chronic pain, inflammation, post-operative analgesia',
+    concentration:'5 mg/mL (injectable) · 1.5 mg/mL oral solution (dog) · 0.5 mg/mL oral solution (cat)',
+    routes:'SQ (single injectable dose in cats) · IV · PO (dogs)',
+    dose:'Dog: 0.2 mg/kg on day 1, then 0.1 mg/kg q24h PO · Cat: 0.3 mg/kg SQ once only (labeled) — chronic use at 0.05 mg/kg PO q24h (with great caution)',
+    contra:'Dehydration, hypotension, renal insufficiency, GI ulceration, concurrent steroids or other NSAIDs — 5–7 day washout required between NSAIDs. Never combine with steroids.',
+    monitor:'Renal values (BUN/Cr before and during use), hydration status, GI signs (vomiting, dark stool, anorexia), urine output intraoperatively',
+    pearl:'"NSAIDs and hypotension are a dangerous combination — always ensure adequate hydration and blood pressure before giving perioperatively. When in doubt, wait until the patient is stable and eating."'
+  },
+  {
+    name:'Butorphanol',generic:'butorphanol tartrate',drugClass:'Kappa Agonist / Mu Antagonist (Mixed Opioid)',
+    badges:[{label:'Mixed Opioid',type:'class'},{label:'C-IV Controlled',type:'schedule'}],
+    uses:'Mild to moderate analgesia, antitussive, sedation augmentation, premed in cats',
+    concentration:'10 mg/mL',
+    routes:'IM · IV · SQ',
+    dose:'Analgesia: 0.2–0.4 mg/kg IM/SQ q2–4h · Sedation: 0.2–0.4 mg/kg IM with dex · Antitussive dog: 0.05–0.1 mg/kg IV/IM',
+    contra:'Not appropriate for severe pain (ceiling effect at mu receptor — limited analgesia). Will antagonize full mu agonists if given concurrently.',
+    monitor:'Sedation level (can be marked in cats), respiratory rate, analgesia efficacy (poor indicator for visceral pain), HR',
+    pearl:'"Butorphanol provides better sedation than analgesia in cats — it is often chosen for the calm, not the pain control. If your patient is truly painful, reach for something with more mu activity."'
+  },
+  {
+    name:'Alfaxalone',generic:'alfaxalone (Alfaxan)',drugClass:'Neuroactive Steroid IV Anesthetic',
+    badges:[{label:'IV Induction',type:'class'}],
+    uses:'IV induction of anesthesia, TIVA, sedation of cats and rabbits, useful in compromised patients',
+    concentration:'10 mg/mL',
+    routes:'IV (preferred) · IM (higher doses needed)',
+    dose:'Dog IV: 1–3 mg/kg titrated · Cat IV: 1–5 mg/kg titrated · Cat IM: 5–10 mg/kg (heavy sedation) · Always titrate to effect',
+    contra:'No known absolute contraindications — use cautiously in severe cardiovascular compromise. IM injection volume can be large at higher doses.',
+    monitor:'Apnea (common — have intubation ready), respiratory rate, SpO₂, muscle twitching/excitation (reduce with premedication), recovery quality',
+    pearl:'"Alfaxalone has become a go-to for cats, exotics, and compromised patients where propofol may be riskier. Recovery can be rough without premedication — always premed. Excitatory movement during induction is common without it."'
+  },
+];
+
+let idx = 0;
+let autoOn = true;
+let timer = null;
+
+function render(i, dir=1) {
+  const card = document.getElementById('rxCard');
+  card.classList.remove('fade-in');
+  card.classList.add('fade-out');
+  setTimeout(() => {
+    idx = ((i % DRUGS.length) + DRUGS.length) % DRUGS.length;
+    const d = DRUGS[idx];
+    document.getElementById('rxClass').textContent = d.drugClass;
+    document.getElementById('rxName').textContent = d.name.toUpperCase();
+    document.getElementById('rxGeneric').textContent = d.generic;
+    // Badges
+    const badge = document.getElementById('rxBadge');
+    badge.innerHTML = d.badges.map(b=>`<span class="rx-badge-pill ${b.type}">${b.label}</span>`).join('');
+    // Grid
+    const grid = document.getElementById('rxGrid');
+    grid.innerHTML = `
+      <div class="rx-field"><span class="rx-field-label">Common Uses</span><div class="rx-field-val">${d.uses}</div></div>
+      <div class="rx-field"><span class="rx-field-label">Concentration</span><div class="rx-field-val mono">${d.concentration}</div></div>
+      <div class="rx-field"><span class="rx-field-label">Routes</span><div class="rx-field-val mono">${d.routes}</div></div>
+      <div class="rx-field"><span class="rx-field-label">Dosing Reference</span><div class="rx-field-val">${d.dose}</div></div>
+    `;
+    document.getElementById('rxContra').textContent = d.contra;
+    document.getElementById('rxMonitor').textContent = d.monitor;
+    document.getElementById('rxPearl').textContent = d.pearl;
+    document.getElementById('rxCounter').textContent = `${idx+1} of ${DRUGS.length}`;
+    card.classList.remove('fade-out');
+    card.classList.add('fade-in');
+  }, 280);
+}
+
+function next(){render(idx+1,1);resetTimer();}
+function prev(){render(idx-1,-1);resetTimer();}
+function toggleAuto(){autoOn=!autoOn;document.getElementById('autoPip').classList.toggle('on',autoOn);if(autoOn)startTimer();else stopTimer();}
+function startTimer(){stopTimer();if(autoOn)timer=setInterval(()=>render(idx+1,1),18000);}
+function stopTimer(){if(timer){clearInterval(timer);timer=null;}}
+function resetTimer(){stopTimer();if(autoOn)startTimer();}
+
+document.getElementById('autoPip').classList.add('on');
+render(0);
+startTimer();
+</script>
+</body>
+</html>
