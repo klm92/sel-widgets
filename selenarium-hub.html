@@ -661,14 +661,18 @@ SECTIONS.forEach(sec => {
   `;
 
   // Ripple on click
-  card.addEventListener('click', function(e) {
+card.addEventListener('click', function(e) {
+    e.preventDefault();
+    window.open(sec.href, '_blank');
+
+    // ripple
     const rect = card.getBoundingClientRect();
     const rip = document.createElement('div');
     rip.className = 'ripple';
     rip.style.cssText = `left:${e.clientX-rect.left-20}px;top:${e.clientY-rect.top-20}px;width:40px;height:40px;`;
     card.appendChild(rip);
     setTimeout(() => rip.remove(), 700);
-  });
+});
 
   grid.appendChild(card);
 });
