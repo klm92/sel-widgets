@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Frame-Options" content="ALLOWALL">
+<meta http-equiv="Content-Security-Policy" content="frame-ancestors *">
+<title>Selenarium · The Archive</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Cinzel:wght@400;500;600&family=Josefin+Sans:wght@100;200;300;400&family=IM+Fell+English:ital@0;1&display=swap');
+
+:root {
+  --bg:        #191919;
+  --bg2:       #1e1e24;
+  --bg3:       #22222c;
+  --panel:     rgba(28, 28, 38, 0.85);
+  --glass:     rgba(255,255,255,0.03);
+  --border:    rgba(180,170,220,0.10);
+  --border2:   rgba(180,170,220,0.22);
+  --moon:      #e8e0d0;
+  --moonsoft:  rgba(232,224,208,0.65);
+  --silver:    #c8c0d8;
+  --silversoft:rgba(200,192,216,0.5);
+  --gold:      #c9a84c;
+  --goldsoft:  rgba(201,168,76,0.25);
+  --teal:      #4a9fa8;
+  --tealsoft:  rgba(74,159,168,0.2);
+  --indigo:    #6a7fc1;
+  --indigosoft:rgba(106,127,193,0.2);
+  --pearl:     #d8d0e8;
+  --text:      #ccc8dc;
+  --text2:     #8a8498;
+  --text3:     #4a4860;
+
+  /* Section accent colors */
+  --noctuary:  #7a6fa8;
+  --storyforge:#8a6a5a;
+  --lantern:   #b07840;
+  --prism:     #6a8ab0;
+  --hearth:    #7a9070;
+  --observatory:#5a7898;
+  --athenaeum: #8a7a5a;
+  --infirmary: #5a9888;
+  --lexicon:   #7a6898;
+  --reverie:   #9a6880;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  padding: 32px 24px 40px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ─── STARFIELD ─────────────────────────────────────────── */
+.starfield {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+.s {
+  position: absolute; background: white; border-radius: 50%;
+  animation: tw var(--d) ease-in-out infinite var(--dl);
+}
+@keyframes tw { 0%,100%{opacity:var(--op)} 50%{opacity:calc(var(--op)*0.1)} }
+
+/* Atmospheric glow pools */
+.glow-pool {
+  position: fixed; border-radius: 50%;
+  pointer-events: none; z-index: 0;
+  filter: blur(80px); opacity: 0.06;
+}
+
+/* ─── LAYOUT ────────────────────────────────────────────── */
+.wrapper { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+
+/* ─── HEADER ────────────────────────────────────────────── */
+.archive-header {
+  text-align: center;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.header-deco {
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px; margin-bottom: 8px;
+}
+.deco-line {
+  height: 1px; width: 60px;
+  background: linear-gradient(90deg, transparent, var(--border2));
+}
+.deco-line.right { background: linear-gradient(90deg, var(--border2), transparent); }
+.deco-glyph { font-size: 13px; color: var(--text3); letter-spacing: 0.3em; }
+
+.archive-title {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--moon);
+  text-shadow: 0 0 40px rgba(232,224,208,0.2);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.archive-subtitle {
+  font-family: 'IM Fell English', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+}
+
+/* Ornate divider */
+.ornate-divider {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin: 20px 0;
+}
+.ornate-line {
+  height: 1px; flex: 1;
+  background: linear-gradient(90deg, transparent, rgba(180,170,220,0.15), transparent);
+}
+.ornate-center {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--text3); font-size: 10px; letter-spacing: 0.4em;
+}
+.ornate-diamond { color: var(--silversoft); font-size: 8px; }
+
+/* ─── GRID ──────────────────────────────────────────────── */
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: auto auto;
+  gap: 10px;
+}
+
+/* ─── SECTION CARD ──────────────────────────────────────── */
+.section-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 16px 18px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.23,1,0.32,1),
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Glass shimmer layer */
+.section-card::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
+  border-radius: 14px 14px 0 0;
+  pointer-events: none;
+}
+
+/* Top accent bar */
+.section-card::after {
+  content: '';
+  position: absolute; top:0; left: 20%; right: 20%;
+  height: 1px;
+  background: var(--accent-color, rgba(200,192,216,0.3));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 1px;
+}
+
+.section-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border2);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.4),
+    0 0 20px var(--glow-color, rgba(139,127,212,0.08)),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.section-card:hover::after { opacity: 1; }
+
+/* Individual accent per card on hover */
+.section-card:hover .card-icon-wrap { box-shadow: 0 0 18px var(--glow-color, rgba(139,127,212,0.3)); }
+.section-card:hover .card-title { color: var(--moon); }
+
+/* ─── CARD ICON ─────────────────────────────────────────── */
+.card-icon-wrap {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.03);
+  flex-shrink: 0;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+}
+
+.card-icon-wrap svg {
+  width: 22px; height: 22px;
+  overflow: visible;
+}
+
+/* ─── CARD TEXT ─────────────────────────────────────────── */
+.card-body { width: 100%; }
+
+.card-title {
+  font-family: 'Cinzel', serif;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--silver);
+  margin-bottom: 5px;
+  line-height: 1.3;
+  transition: color 0.3s ease;
+}
+
+.card-the {
+  font-family: 'IM Fell English', serif;
+  font-size: 9px;
+  font-style: italic;
+  color: var(--text3);
+  display: block;
+  letter-spacing: 0.1em;
+  margin-bottom: 1px;
+}
+
+.card-tagline {
+  font-family: 'IM Fell English', serif;
+  font-size: 9.5px;
+  font-style: italic;
+  color: var(--text3);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+/* ─── LANTERN GLOW PARTICLES ────────────────────────────── */
+.card-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--glow-color, rgba(201,168,76,0.5));
+  pointer-events: none;
+  opacity: 0;
+  animation: none;
+}
+
+.section-card:hover .card-particle {
+  animation: float-particle var(--pd, 2s) ease-in-out infinite var(--pdl, 0s);
+}
+
+@keyframes float-particle {
+  0% { opacity: 0; transform: translate(0, 0) scale(0); }
+  30% { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(var(--px, 10px), var(--py, -30px)) scale(0.3); }
+}
+
+/* ─── CONSTELLATION BACKGROUND ──────────────────────────── */
+.card-constellation {
+  position: absolute; bottom: 0; right: 0;
+  width: 60px; height: 60px;
+  opacity: 0.07;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.section-card:hover .card-constellation { opacity: 0.18; }
+
+/* ─── FOOTER ────────────────────────────────────────────── */
+.archive-footer {
+  text-align: center;
+  margin-top: 32px;
+}
+
+.footer-text {
+  font-family: 'IM Fell English', serif;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text3);
+  letter-spacing: 0.05em;
+}
+
+/* ─── RIPPLE ─────────────────────────────────────────────── */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  transform: scale(0);
+  animation: ripple 0.6s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes ripple { to { transform: scale(4); opacity: 0; } }
+
+/* ─── TOOLTIP ────────────────────────────────────────────── */
+.card-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%; transform: translateX(-50%);
+  background: rgba(20,18,28,0.95);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--silversoft);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+.section-card:hover .card-tooltip { opacity: 1; }
+
+/* ─── WING OVERLAY ───────────────────────────────────────── */
+.wing-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,8,20,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.wing-overlay.active { display: flex; }
+
+.wing-panel {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 36px 40px 32px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 40px var(--wing-glow, rgba(180,170,220,0.05));
+  animation: panel-in 0.25s cubic-bezier(0.23,1,0.32,1) forwards;
+}
+@keyframes panel-in {
+  from { opacity:0; transform: scale(0.94) translateY(8px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+
+/* Accent bar at top of panel */
+.wing-panel::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 1px;
+  background: var(--wing-accent, rgba(200,192,216,0.3));
+  border-radius: 1px;
+}
+
+.wing-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  font-size: 13px;
+  color: var(--text3);
+  cursor: pointer;
+  background: none;
+  border: none;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+  font-family: 'Josefin Sans', sans-serif;
+}
+.wing-close:hover { color: var(--silver); }
+
+.wing-panel-the {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.wing-panel-name {
+  font-family: 'Cinzel', serif;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--moon);
+  text-shadow: 0 0 30px var(--wing-glow, rgba(232,224,208,0.15));
+  margin-bottom: 12px;
+}
+
+.wing-panel-tagline {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 28px;
+  letter-spacing: 0.02em;
+}
+
+.wing-panel-link {
+  display: inline-block;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 9.5px;
+  font-weight: 300;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--wing-accent, var(--silver));
+  border: 1px solid var(--wing-accent, var(--border2));
+  border-radius: 8px;
+  padding: 11px 22px;
+  text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+  opacity: 0.85;
+}
+.wing-panel-link:hover {
+  background: var(--wing-glow, rgba(200,192,216,0.08));
+  box-shadow: 0 0 16px var(--wing-glow, rgba(180,170,220,0.1));
+  color: var(--moon);
+  opacity: 1;
+}
+
+/* Disabled state when no link set */
+.wing-panel-link.no-link {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+</style>
+</head>
+<body>
+
+<div class="starfield" id="starfield"></div>
+<div class="glow-pool" style="width:400px;height:400px;background:#5a6898;top:-100px;left:-100px;"></div>
+<div class="glow-pool" style="width:300px;height:300px;background:#6a4a88;bottom:-50px;right:-50px;"></div>
+<div class="glow-pool" style="width:250px;height:250px;background:#4a7880;top:40%;left:40%;"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header class="archive-header">
+    <div class="header-deco">
+      <div class="deco-line"></div>
+      <div class="deco-glyph">⋆ ✦ ⋆</div>
+      <div class="deco-line right"></div>
+    </div>
+    <h1 class="archive-title">THE SELENARIUM</h1>
+    <p class="archive-subtitle">A living archive of memory, craft, and wonder</p>
+  </header>
+
+  <div class="ornate-divider">
+    <div class="ornate-line"></div>
+    <div class="ornate-center">
+      <span class="ornate-diamond">◆</span>
+      <span style="font-size:9px;letter-spacing:0.5em;color:var(--text3);font-family:'Josefin Sans',sans-serif;">WINGS OF THE ARCHIVE</span>
+      <span class="ornate-diamond">◆</span>
+    </div>
+    <div class="ornate-line"></div>
+  </div>
+
+  <!-- GRID -->
+  <div class="archive-grid" id="archiveGrid"></div>
+
+  <div class="ornate-divider" style="margin-top:28px;">
+    <div class="ornate-line"></div>
+    <div class="ornate-center">
+      <span class="ornate-diamond">✦</span>
+    </div>
+    <div class="ornate-line"></div>
+  </div>
+
+  <footer class="archive-footer">
+    <p class="footer-text">"Per aspera ad astra — through hardship, to the stars"</p>
+  </footer>
+
+</div>
+
+<!-- WING OVERLAY -->
+<div class="wing-overlay" id="wingOverlay">
+  <div class="wing-panel" id="wingPanel">
+    <button class="wing-close" id="wingClose">✕</button>
+    <span class="wing-panel-the" id="wingThe"></span>
+    <div class="wing-panel-name" id="wingName"></div>
+    <div class="wing-panel-tagline" id="wingTagline"></div>
+    <a class="wing-panel-link" id="wingLink" href="#" target="_blank">Open in Notion &nbsp;→</a>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ────────────────────────────────────────────
+const sf = document.getElementById('starfield');
+for (let i = 0; i < 130; i++) {
+  const s = document.createElement('div'); s.className = 's';
+  const sz = Math.random() * 1.8 + 0.3;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;--dl:${Math.random()*6}s;--op:${0.1+Math.random()*0.45};`;
+  sf.appendChild(s);
+}
+
+// ── SECTION DATA ─────────────────────────────────────────
+const SECTIONS = [
+  {
+    id: 'noctuary',
+    the: 'The',
+    name: 'Noctuary',
+    tagline: 'Private reflections, memories, daily logs & the records of becoming',
+    accent: '#7a6fa8',
+    glow: 'rgba(122,111,168,0.35)',
+    href: '#',
+    tooltip: 'Daily Logs · Journal · Memory',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Open book / journal -->
+      <path d="M2 6c0-1.1.9-2 2-2h7v16H4a2 2 0 0 1-2-2V6z" stroke="rgba(122,111,168,0.8)" fill="rgba(122,111,168,0.08)"/>
+      <path d="M22 6c0-1.1-.9-2-2-2h-7v16h7a2 2 0 0 0 2-2V6z" stroke="rgba(122,111,168,0.8)" fill="rgba(122,111,168,0.08)"/>
+      <path d="M12 4v16" stroke="rgba(122,111,168,0.5)"/>
+      <!-- Moon above -->
+      <path d="M8 9 Q9 7 11 8 Q9 9 9 11 Q7 10 8 9z" fill="rgba(200,192,216,0.6)" stroke="none"/>
+      <circle cx="16" cy="9" r="0.8" fill="rgba(200,192,216,0.5)"/>
+      <circle cx="15" cy="12" r="0.5" fill="rgba(200,192,216,0.4)"/>
+    </svg>`,
+    particles: [{x:'8px',y:'-25px'},{x:'-5px',y:'-30px'},{x:'15px',y:'-20px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="50" cy="10" r="1.5" fill="currentColor"/><circle cx="40" cy="25" r="1" fill="currentColor"/><circle cx="55" cy="35" r="1.2" fill="currentColor"/><circle cx="45" cy="48" r="1" fill="currentColor"/><line x1="50" y1="10" x2="40" y2="25" stroke="currentColor" stroke-width="0.5"/><line x1="40" y1="25" x2="55" y2="35" stroke="currentColor" stroke-width="0.5"/><line x1="55" y1="35" x2="45" y2="48" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'storyforge',
+    the: 'The',
+    name: 'Storyforge',
+    tagline: 'Story bibles, worldbuilding, character studies & magic in progress',
+    accent: '#a07060',
+    glow: 'rgba(160,112,96,0.35)',
+    href: '#',
+    tooltip: 'Writing · Worldbuilding · Fiction',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Quill / forge flame hybrid -->
+      <path d="M20 3 C14 3 8 8 7 15 L5 20 L10 18 C16 16 21 10 20 3z" stroke="rgba(160,112,96,0.9)" fill="rgba(160,112,96,0.1)"/>
+      <path d="M7 15 L5 20" stroke="rgba(160,112,96,0.7)"/>
+      <!-- Flame within -->
+      <path d="M14 8 Q16 11 14 13 Q12 11 13 8z" fill="rgba(201,168,76,0.5)" stroke="none"/>
+      <!-- Spark -->
+      <circle cx="18" cy="5" r="0.8" fill="rgba(201,168,76,0.7)"/>
+      <circle cx="16" cy="7" r="0.5" fill="rgba(201,168,76,0.5)"/>
+    </svg>`,
+    particles: [{x:'12px',y:'-28px'},{x:'-8px',y:'-22px'},{x:'5px',y:'-35px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="48" cy="8" r="1.5" fill="currentColor"/><circle cx="55" cy="22" r="1" fill="currentColor"/><circle cx="42" cy="30" r="1.2" fill="currentColor"/><circle cx="50" cy="45" r="1" fill="currentColor"/><line x1="48" y1="8" x2="55" y2="22" stroke="currentColor" stroke-width="0.5"/><line x1="55" y1="22" x2="42" y2="30" stroke="currentColor" stroke-width="0.5"/><line x1="42" y1="30" x2="50" y2="45" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'lantern',
+    the: 'The',
+    name: 'Lantern Theatre',
+    tagline: 'Films, television, music, books, games, reviews & beloved obsessions',
+    accent: '#b07840',
+    glow: 'rgba(176,120,64,0.35)',
+    href: '#',
+    tooltip: 'Media · Reviews · Obsessions',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Lantern body -->
+      <rect x="8" y="7" width="8" height="11" rx="2" stroke="rgba(176,120,64,0.9)" fill="rgba(176,120,64,0.08)"/>
+      <!-- Top cap -->
+      <path d="M7 7 L12 4 L17 7" stroke="rgba(176,120,64,0.8)" fill="none"/>
+      <!-- Handle loop -->
+      <path d="M10 4 Q12 2 14 4" stroke="rgba(176,120,64,0.6)" fill="none"/>
+      <!-- Flame inside -->
+      <path d="M12 15 Q11 13 12 11 Q13 13 12 15z" fill="rgba(201,168,76,0.8)" stroke="none"/>
+      <!-- Glow lines -->
+      <line x1="8" y1="10" x2="16" y2="10" stroke="rgba(201,168,76,0.2)"/>
+      <line x1="8" y1="13" x2="16" y2="13" stroke="rgba(201,168,76,0.15)"/>
+      <!-- Base -->
+      <rect x="9" y="18" width="6" height="1.5" rx="0.5" stroke="rgba(176,120,64,0.7)" fill="rgba(176,120,64,0.1)"/>
+    </svg>`,
+    particles: [{x:'-10px',y:'-28px'},{x:'10px',y:'-32px'},{x:'0px',y:'-38px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="52" cy="12" r="1.5" fill="currentColor"/><circle cx="44" cy="20" r="1" fill="currentColor"/><circle cx="54" cy="32" r="1.2" fill="currentColor"/><circle cx="46" cy="44" r="1" fill="currentColor"/><circle cx="56" cy="50" r="0.8" fill="currentColor"/><line x1="52" y1="12" x2="44" y2="20" stroke="currentColor" stroke-width="0.5"/><line x1="44" y1="20" x2="54" y2="32" stroke="currentColor" stroke-width="0.5"/><line x1="54" y1="32" x2="46" y2="44" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'prism',
+    the: 'The',
+    name: 'Prism Room',
+    tagline: 'Memories, music, photos, comfort & five lives in one heart',
+    accent: '#5a80b8',
+    glow: 'rgba(90,128,184,0.35)',
+    href: '#',
+    tooltip: 'SHINee · Music · Memories',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Diamond / prism shape -->
+      <path d="M12 3 L20 9 L12 21 L4 9 Z" stroke="rgba(90,128,184,0.9)" fill="rgba(90,128,184,0.08)"/>
+      <!-- Facet lines -->
+      <line x1="4" y1="9" x2="20" y2="9" stroke="rgba(90,128,184,0.5)"/>
+      <line x1="12" y1="3" x2="4" y2="9" stroke="rgba(90,128,184,0.4)"/>
+      <line x1="12" y1="3" x2="20" y2="9" stroke="rgba(90,128,184,0.4)"/>
+      <line x1="8" y1="9" x2="12" y2="21" stroke="rgba(90,128,184,0.3)"/>
+      <line x1="16" y1="9" x2="12" y2="21" stroke="rgba(90,128,184,0.3)"/>
+      <!-- Light refraction dots -->
+      <circle cx="18" cy="6" r="0.8" fill="rgba(200,192,216,0.8)"/>
+      <circle cx="6" cy="14" r="0.6" fill="rgba(176,120,64,0.7)"/>
+      <circle cx="20" cy="16" r="0.5" fill="rgba(122,111,168,0.7)"/>
+    </svg>`,
+    particles: [{x:'14px',y:'-20px'},{x:'-12px',y:'-26px'},{x:'6px',y:'-32px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="50" cy="8" r="1.5" fill="currentColor"/><circle cx="56" cy="20" r="1" fill="currentColor"/><circle cx="46" cy="28" r="1.2" fill="currentColor"/><circle cx="58" cy="38" r="0.8" fill="currentColor"/><circle cx="48" cy="50" r="1" fill="currentColor"/><line x1="50" y1="8" x2="56" y2="20" stroke="currentColor" stroke-width="0.5"/><line x1="56" y1="20" x2="46" y2="28" stroke="currentColor" stroke-width="0.5"/><line x1="46" y1="28" x2="58" y2="38" stroke="currentColor" stroke-width="0.5"/><line x1="58" y1="38" x2="48" y2="50" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'hearth',
+    the: 'The',
+    name: 'Hearth',
+    tagline: 'Recipes, finances, planning, routines, domestic comforts & everyday life',
+    accent: '#6a9060',
+    glow: 'rgba(106,144,96,0.35)',
+    href: '#',
+    tooltip: 'Home · Finances · Routines',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- House / hearth -->
+      <path d="M3 12 L12 4 L21 12" stroke="rgba(106,144,96,0.9)" fill="none"/>
+      <path d="M5 10 L5 20 L19 20 L19 10" stroke="rgba(106,144,96,0.8)" fill="rgba(106,144,96,0.06)"/>
+      <!-- Hearth/fireplace -->
+      <rect x="9" y="13" width="6" height="7" rx="0.5" stroke="rgba(106,144,96,0.7)" fill="rgba(106,144,96,0.1)"/>
+      <!-- Flame -->
+      <path d="M12 19 Q11 17 12 15 Q13 17 12 19z" fill="rgba(201,168,76,0.7)" stroke="none"/>
+      <!-- Herb sprigs -->
+      <path d="M6 16 Q7 14 8 16" stroke="rgba(106,144,96,0.6)" fill="none"/>
+      <path d="M16 16 Q17 14 18 16" stroke="rgba(106,144,96,0.6)" fill="none"/>
+    </svg>`,
+    particles: [{x:'0px',y:'-30px'},{x:'10px',y:'-24px'},{x:'-10px',y:'-26px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="47" cy="10" r="1.5" fill="currentColor"/><circle cx="55" cy="24" r="1" fill="currentColor"/><circle cx="43" cy="36" r="1.2" fill="currentColor"/><circle cx="53" cy="48" r="1" fill="currentColor"/><line x1="47" y1="10" x2="55" y2="24" stroke="currentColor" stroke-width="0.5"/><line x1="55" y1="24" x2="43" y2="36" stroke="currentColor" stroke-width="0.5"/><line x1="43" y1="36" x2="53" y2="48" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'observatory',
+    the: 'The',
+    name: 'Observatory',
+    tagline: 'Rituals, goal tracking, aspirations, growth & the slow shaping of a meaningful life',
+    accent: '#4a7898',
+    glow: 'rgba(74,120,152,0.35)',
+    href: '#',
+    tooltip: 'Goals · Growth · Rituals',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Telescope -->
+      <path d="M3 14 L16 8" stroke="rgba(74,120,152,0.9)" stroke-width="2"/>
+      <path d="M14 6 L18 10 L16 11 L12 7z" stroke="rgba(74,120,152,0.8)" fill="rgba(74,120,152,0.15)"/>
+      <!-- Eyepiece -->
+      <circle cx="4" cy="13.5" r="1.5" stroke="rgba(74,120,152,0.7)" fill="rgba(74,120,152,0.1)"/>
+      <!-- Stand -->
+      <line x1="9.5" y1="11" x2="9.5" y2="20" stroke="rgba(74,120,152,0.6)"/>
+      <line x1="7" y1="20" x2="12" y2="20" stroke="rgba(74,120,152,0.7)"/>
+      <!-- Stars being observed -->
+      <circle cx="20" cy="4" r="1" fill="rgba(200,192,216,0.8)"/>
+      <circle cx="22" cy="8" r="0.6" fill="rgba(200,192,216,0.5)"/>
+    </svg>`,
+    particles: [{x:'16px',y:'-22px'},{x:'-6px',y:'-30px'},{x:'8px',y:'-36px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="52" cy="6" r="1.5" fill="currentColor"/><circle cx="58" cy="18" r="1" fill="currentColor"/><circle cx="48" cy="26" r="1.2" fill="currentColor"/><circle cx="56" cy="40" r="0.8" fill="currentColor"/><circle cx="44" cy="52" r="1" fill="currentColor"/><line x1="52" y1="6" x2="58" y2="18" stroke="currentColor" stroke-width="0.5"/><line x1="58" y1="18" x2="48" y2="26" stroke="currentColor" stroke-width="0.5"/><line x1="48" y1="26" x2="56" y2="40" stroke="currentColor" stroke-width="0.5"/><line x1="56" y1="40" x2="44" y2="52" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'athenaeum',
+    the: 'The',
+    name: 'Athenaeum',
+    tagline: 'Knowledge, research, references, links & collected curiosities',
+    accent: '#8a7a5a',
+    glow: 'rgba(138,122,90,0.35)',
+    href: '#',
+    tooltip: 'Knowledge · Research · Curiosities',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Stacked books / library -->
+      <rect x="4" y="14" width="16" height="6" rx="1" stroke="rgba(138,122,90,0.9)" fill="rgba(138,122,90,0.08)"/>
+      <rect x="5" y="9" width="12" height="5" rx="1" stroke="rgba(138,122,90,0.8)" fill="rgba(138,122,90,0.06)"/>
+      <rect x="7" y="5" width="8" height="4" rx="1" stroke="rgba(138,122,90,0.7)" fill="rgba(138,122,90,0.05)"/>
+      <!-- Spine lines -->
+      <line x1="9" y1="5" x2="9" y2="9" stroke="rgba(138,122,90,0.4)"/>
+      <line x1="11" y1="9" x2="11" y2="14" stroke="rgba(138,122,90,0.3)"/>
+      <line x1="13" y1="14" x2="13" y2="20" stroke="rgba(138,122,90,0.25)"/>
+      <!-- Candle -->
+      <line x1="20" y1="10" x2="20" y2="14" stroke="rgba(200,192,216,0.6)" stroke-width="1.5"/>
+      <path d="M20 10 Q19.5 9 20 8 Q20.5 9 20 10z" fill="rgba(201,168,76,0.8)" stroke="none"/>
+    </svg>`,
+    particles: [{x:'5px',y:'-28px'},{x:'-12px',y:'-20px'},{x:'14px',y:'-32px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="49" cy="9" r="1.5" fill="currentColor"/><circle cx="57" cy="22" r="1" fill="currentColor"/><circle cx="45" cy="32" r="1.2" fill="currentColor"/><circle cx="55" cy="46" r="1" fill="currentColor"/><line x1="49" y1="9" x2="57" y2="22" stroke="currentColor" stroke-width="0.5"/><line x1="57" y1="22" x2="45" y2="32" stroke="currentColor" stroke-width="0.5"/><line x1="45" y1="32" x2="55" y2="46" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'infirmary',
+    the: 'The',
+    name: 'Infirmary',
+    tagline: 'Clinical vetmed notes, study materials, pharmacology & the care of living things',
+    accent: '#4a9878',
+    glow: 'rgba(74,152,120,0.35)',
+    href: '#',
+    tooltip: 'Vet Med · Pharmacology · Clinical',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Caduceus-lite / mortar & pestle hybrid -->
+      <!-- Staff -->
+      <line x1="12" y1="3" x2="12" y2="19" stroke="rgba(74,152,120,0.8)"/>
+      <!-- Serpent curves -->
+      <path d="M12 7 Q16 9 12 11 Q8 13 12 15" stroke="rgba(74,152,120,0.7)" fill="none"/>
+      <!-- Wings at top -->
+      <path d="M12 4 Q9 3 8 5" stroke="rgba(74,152,120,0.6)" fill="none"/>
+      <path d="M12 4 Q15 3 16 5" stroke="rgba(74,152,120,0.6)" fill="none"/>
+      <!-- Paw print base -->
+      <circle cx="12" cy="20" r="1.5" fill="rgba(74,152,120,0.3)" stroke="rgba(74,152,120,0.7)"/>
+      <circle cx="10" cy="18.5" r="0.7" fill="rgba(74,152,120,0.5)"/>
+      <circle cx="14" cy="18.5" r="0.7" fill="rgba(74,152,120,0.5)"/>
+    </svg>`,
+    particles: [{x:'-8px',y:'-26px'},{x:'10px',y:'-30px'},{x:'2px',y:'-36px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="51" cy="11" r="1.5" fill="currentColor"/><circle cx="57" cy="25" r="1" fill="currentColor"/><circle cx="45" cy="35" r="1.2" fill="currentColor"/><circle cx="53" cy="49" r="1" fill="currentColor"/><line x1="51" y1="11" x2="57" y2="25" stroke="currentColor" stroke-width="0.5"/><line x1="57" y1="25" x2="45" y2="35" stroke="currentColor" stroke-width="0.5"/><line x1="45" y1="35" x2="53" y2="49" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'lexicon',
+    the: 'The',
+    name: 'Lexicon',
+    tagline: 'Vocabulary, grammar, study plans, immersion & new ways of speaking',
+    accent: '#7060a0',
+    glow: 'rgba(112,96,160,0.35)',
+    href: '#',
+    tooltip: 'Languages · Study · Immersion',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Speech bubble with glyphs -->
+      <path d="M3 6 Q3 3 6 3 L18 3 Q21 3 21 6 L21 14 Q21 17 18 17 L13 17 L9 21 L9 17 L6 17 Q3 17 3 14 Z"
+        stroke="rgba(112,96,160,0.9)" fill="rgba(112,96,160,0.07)"/>
+      <!-- Symbolic letterforms inside -->
+      <text x="6.5" y="12" font-size="5" fill="rgba(200,192,216,0.7)" font-family="serif" font-style="italic">ℓ</text>
+      <text x="10.5" y="12" font-size="5" fill="rgba(200,192,216,0.5)" font-family="serif">α</text>
+      <text x="14.5" y="12" font-size="5" fill="rgba(200,192,216,0.6)" font-family="serif">ŋ</text>
+    </svg>`,
+    particles: [{x:'12px',y:'-24px'},{x:'-8px',y:'-28px'},{x:'4px',y:'-34px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="53" cy="8" r="1.5" fill="currentColor"/><circle cx="45" cy="20" r="1" fill="currentColor"/><circle cx="57" cy="30" r="1.2" fill="currentColor"/><circle cx="47" cy="44" r="1" fill="currentColor"/><line x1="53" y1="8" x2="45" y2="20" stroke="currentColor" stroke-width="0.5"/><line x1="45" y1="20" x2="57" y2="30" stroke="currentColor" stroke-width="0.5"/><line x1="57" y1="30" x2="47" y2="44" stroke="currentColor" stroke-width="0.5"/></svg>`
+  },
+  {
+    id: 'reverie',
+    the: 'The',
+    name: 'Reverie',
+    tagline: 'Moodboards, aesthetics, playlists, visions, fragments & sweet dreams',
+    accent: '#9a5880',
+    glow: 'rgba(154,88,128,0.35)',
+    href: '#',
+    tooltip: 'Dreams · Aesthetics · Visions',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Crescent moon with dream wisps -->
+      <path d="M17 12 A7 7 0 1 1 12 5 A5 5 0 0 0 17 12z"
+        stroke="rgba(154,88,128,0.9)" fill="rgba(154,88,128,0.1)"/>
+      <!-- Wisp / dream tendrils -->
+      <path d="M17 8 Q19 7 20 9 Q18 9 17 8z" fill="rgba(200,192,216,0.4)" stroke="none"/>
+      <path d="M18 12 Q21 12 21 15 Q19 13 18 12z" fill="rgba(200,192,216,0.3)" stroke="none"/>
+      <!-- Stars around -->
+      <circle cx="20" cy="5" r="0.8" fill="rgba(200,192,216,0.8)"/>
+      <circle cx="22" cy="10" r="0.5" fill="rgba(200,192,216,0.6)"/>
+      <circle cx="19" cy="18" r="0.6" fill="rgba(154,88,128,0.8)"/>
+    </svg>`,
+    particles: [{x:'-6px',y:'-32px'},{x:'14px',y:'-26px'},{x:'4px',y:'-38px'}],
+    constellation: `<svg viewBox="0 0 60 60" fill="none"><circle cx="50" cy="7" r="1.5" fill="currentColor"/><circle cx="58" cy="19" r="1" fill="currentColor"/><circle cx="46" cy="29" r="1.2" fill="currentColor"/><circle cx="56" cy="42" r="0.8" fill="currentColor"/><circle cx="48" cy="54" r="1" fill="currentColor"/><line x1="50" y1="7" x2="58" y2="19" stroke="currentColor" stroke-width="0.5"/><line x1="58" y1="19" x2="46" y2="29" stroke="currentColor" stroke-width="0.5"/><line x1="46" y1="29" x2="56" y2="42" stroke="currentColor" stroke-width="0.5"/><line x1="56" y1="42" x2="48" y2="54" stroke="currentColor" stroke-width="0.5"/></svg>`
+  }
+];
+
+// ── BUILD CARDS ──────────────────────────────────────────
+const grid = document.getElementById('archiveGrid');
+
+SECTIONS.forEach(sec => {
+  const card = document.createElement('a');
+  card.href = sec.href;
+  card.className = 'section-card';
+  card.style.setProperty('--accent-color', sec.accent);
+  card.style.setProperty('--glow-color', sec.glow);
+
+  // Particles
+  const particleHTML = (sec.particles || []).map((p, i) =>
+    `<div class="card-particle" style="width:3px;height:3px;bottom:30%;left:50%;--pd:${1.5+i*0.4}s;--pdl:${i*0.3}s;--px:${p.x};--py:${p.y};"></div>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="card-tooltip">${sec.tooltip}</div>
+    <div class="card-icon-wrap" style="border-color:${sec.accent}30;">
+      ${sec.icon}
+    </div>
+    <div class="card-body">
+      <div class="card-title">
+        <span class="card-the">${sec.the}</span>
+        ${sec.name}
+      </div>
+      <div class="card-tagline">${sec.tagline}</div>
+    </div>
+    <div class="card-constellation" style="color:${sec.accent};">${sec.constellation}</div>
+    ${particleHTML}
+  `;
+
+  // Click → open overlay
+  card.addEventListener('click', function(e) {
+    e.preventDefault();
+
+    // Populate overlay with this wing's data
+    const panel = document.getElementById('wingPanel');
+    document.getElementById('wingThe').textContent = sec.the;
+    document.getElementById('wingName').textContent = sec.name;
+    document.getElementById('wingTagline').textContent = sec.tagline;
+
+    const link = document.getElementById('wingLink');
+    if (sec.href && sec.href !== '#') {
+      link.href = sec.href;
+      link.classList.remove('no-link');
+      link.textContent = 'Open in Notion  →';
+    } else {
+      link.href = '#';
+      link.classList.add('no-link');
+      link.textContent = 'Link not yet set';
+    }
+
+    panel.style.setProperty('--wing-accent', sec.accent);
+    panel.style.setProperty('--wing-glow', sec.glow);
+
+    // Re-trigger animation
+    panel.style.animation = 'none';
+    panel.offsetHeight; // reflow
+    panel.style.animation = '';
+
+    document.getElementById('wingOverlay').classList.add('active');
+
+    // Ripple
+    const rect = card.getBoundingClientRect();
+    const rip = document.createElement('div');
+    rip.className = 'ripple';
+    rip.style.cssText = `left:${e.clientX-rect.left-20}px;top:${e.clientY-rect.top-20}px;width:40px;height:40px;`;
+    card.appendChild(rip);
+    setTimeout(() => rip.remove(), 700);
+  });
+
+  grid.appendChild(card);
+});
+
+// ── OVERLAY CLOSE HANDLERS ───────────────────────────────
+document.getElementById('wingClose').addEventListener('click', () => {
+  document.getElementById('wingOverlay').classList.remove('active');
+});
+document.getElementById('wingOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('active');
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') document.getElementById('wingOverlay').classList.remove('active');
+});
+</script>
+</body>
+</html>
