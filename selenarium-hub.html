@@ -635,6 +635,7 @@ const grid = document.getElementById('archiveGrid');
 SECTIONS.forEach(sec => {
   const card = document.createElement('a');
   card.href = sec.href;
+  card.target = '_blank';
   card.className = 'section-card';
   card.style.setProperty('--accent-color', sec.accent);
   card.style.setProperty('--glow-color', sec.glow);
