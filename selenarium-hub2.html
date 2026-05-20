@@ -797,15 +797,9 @@ SECTIONS.forEach(sec => {
     document.getElementById('wingTagline').textContent = sec.tagline;
 
     const link = document.getElementById('wingLink');
-    if (sec.href && sec.href !== '#') {
-      link.href = sec.href;
-      link.classList.remove('no-link');
-      link.textContent = 'Open in Notion  →';
-    } else {
-      link.href = '#';
-      link.classList.add('no-link');
-      link.textContent = 'Link not yet set';
-    }
+    link.href = sec.href;
+    link.classList.remove('no-link');
+    link.textContent = 'Open in Notion  →';
 
     panel.style.setProperty('--wing-accent', sec.accent);
     panel.style.setProperty('--wing-glow', sec.glow);
