@@ -1,0 +1,206 @@
+
+<h2 class="sr-only">The light and the warmth — worldbuilding bible inbox widget for capturing and sorting ideas by tag</h2>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0d12;--surface:#13131a;--surface2:#1a1a24;--border:#252535;--border2:#32324a;
+  --teal:#00c8a0;--teal-dim:#00956e;--pink:#ff2d78;--purple:#7F77DD;--amber:#EF9F27;
+  --blue:#378ADD;--coral:#D85A30;--gray:#888780;--red:#E24B4A;
+  --text:#f0eeff;--text2:#9d9bb8;--text3:#534AB7;
+}
+.ib{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;padding:20px;border-radius:12px;}
+.ib-stripe{height:2px;background:linear-gradient(90deg,var(--teal),var(--purple),var(--pink));border-radius:99px;margin-bottom:18px;}
+.ib-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.ib-title{font-size:11px;letter-spacing:2px;color:var(--text3);}
+.ib-title span{color:var(--text2);}
+.ib-counts{display:flex;gap:10px;}
+.ib-count-pill{font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:99px;border:0.5px solid var(--border2);color:var(--text2);}
+.ib-count-pill.urgent{border-color:var(--pink);color:var(--pink);}
+.compose{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+.compose:focus-within{border-color:var(--teal);}
+.compose textarea{width:100%;background:transparent;border:none;outline:none;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text);resize:none;line-height:1.7;min-height:56px;}
+.compose textarea::placeholder{color:var(--text3);}
+.compose-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px;flex-wrap:wrap;}
+.tags-row{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+.tag{font-size:9px;letter-spacing:1.5px;border:0.5px solid var(--border2);border-radius:99px;padding:4px 10px;cursor:pointer;color:var(--text2);background:transparent;font-family:'Share Tech Mono',monospace;transition:all 0.15s;}
+.tag:hover{color:var(--text);background:var(--surface2);}
+.tag.on{border-color:transparent;color:#fff;}
+.tag.on.world{background:var(--teal-dim);}
+.tag.on.char{background:#993556;}
+.tag.on.plot{background:#854F0B;}
+.tag.on.inspo{background:#534AB7;}
+.tag.on.res{background:#185FA5;}
+.tag.on.voice{background:#993C1D;}
+.tag.on.misc{background:#5F5E5A;}
+.compose-actions{display:flex;gap:6px;align-items:center;}
+.hint{font-size:9px;color:var(--text3);letter-spacing:1px;}
+.btn{font-size:10px;letter-spacing:1.5px;border:0.5px solid var(--border2);border-radius:6px;padding:7px 16px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.15s;}
+.btn:hover{color:var(--text);border-color:var(--border2);}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#001a12;}
+.btn.primary:hover{background:#00e0b0;border-color:#00e0b0;}
+.ib-divider{height:0.5px;background:var(--border);margin:16px 0;}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.section-label{font-size:9px;letter-spacing:3px;color:var(--text3);display:flex;align-items:center;gap:8px;}
+.section-badge{background:var(--surface2);border:0.5px solid var(--border2);border-radius:99px;padding:2px 8px;font-size:9px;color:var(--text2);}
+.filter-row{display:flex;gap:4px;flex-wrap:wrap;}
+.filter{font-size:9px;letter-spacing:1px;border:0.5px solid transparent;border-radius:99px;padding:3px 9px;cursor:pointer;color:var(--text3);background:transparent;font-family:'Share Tech Mono',monospace;transition:all 0.15s;}
+.filter:hover{color:var(--text2);}
+.filter.on{border-color:var(--border2);color:var(--text);background:var(--surface2);}
+.ghost-btn{font-size:9px;letter-spacing:1px;background:none;border:none;color:var(--text3);cursor:pointer;font-family:'Share Tech Mono',monospace;transition:color 0.15s;}
+.ghost-btn:hover{color:var(--text2);}
+.entries{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
+.entry{border:0.5px solid var(--border);border-radius:8px;padding:11px 13px;background:var(--surface);transition:border-color 0.15s;}
+.entry:hover{border-color:var(--border2);}
+.entry.sorted{opacity:0.35;border-style:dashed;background:transparent;}
+.entry-text{font-size:12px;color:var(--text);line-height:1.65;margin-bottom:8px;word-break:break-word;}
+.entry.sorted .entry-text{text-decoration:line-through;color:var(--text2);}
+.entry-foot{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.etag{font-size:9px;letter-spacing:1px;border-radius:99px;padding:2px 9px;}
+.etag.world{background:rgba(0,200,160,0.12);color:#00c8a0;border:0.5px solid rgba(0,200,160,0.25);}
+.etag.char{background:rgba(212,83,126,0.12);color:#ED93B1;border:0.5px solid rgba(212,83,126,0.25);}
+.etag.plot{background:rgba(239,159,39,0.12);color:#EF9F27;border:0.5px solid rgba(239,159,39,0.25);}
+.etag.inspo{background:rgba(127,119,221,0.12);color:#AFA9EC;border:0.5px solid rgba(127,119,221,0.25);}
+.etag.res{background:rgba(55,138,221,0.12);color:#85B7EB;border:0.5px solid rgba(55,138,221,0.25);}
+.etag.voice{background:rgba(216,90,48,0.12);color:#F0997B;border:0.5px solid rgba(216,90,48,0.25);}
+.etag.misc{background:rgba(136,135,128,0.12);color:#B4B2A9;border:0.5px solid rgba(136,135,128,0.25);}
+.etag.untagged{background:rgba(83,74,183,0.08);color:#534AB7;border:0.5px solid rgba(83,74,183,0.2);}
+.entry-date{font-size:9px;color:var(--text3);margin-left:auto;}
+.entry-acts{display:flex;gap:4px;margin-left:6px;}
+.act{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:0 3px;line-height:1;transition:color 0.15s;}
+.act.check:hover{color:var(--teal);}
+.act.undo:hover{color:var(--purple);}
+.act.del:hover{color:var(--red);}
+.empty{font-size:10px;color:var(--text3);letter-spacing:1px;padding:12px 0;font-style:italic;}
+.scratchpad{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-top:4px;}
+.sp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sp-label{font-size:9px;letter-spacing:3px;color:var(--text3);}
+.sp-btn{font-size:9px;letter-spacing:1px;background:transparent;border:0.5px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;font-family:'Share Tech Mono',monospace;padding:4px 12px;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
+.sp-btn:hover{border-color:var(--teal);color:var(--teal);}
+.sp-content{font-size:11px;color:var(--text2);line-height:1.8;white-space:pre-wrap;word-break:break-word;max-height:160px;overflow-y:auto;}
+.sp-content.empty{color:var(--text3);font-style:italic;font-size:10px;}
+.copied{font-size:9px;color:var(--teal);letter-spacing:1px;}
+</style>
+
+<div class="ib">
+  <div class="ib-stripe"></div>
+
+  <div class="ib-header">
+    <span class="ib-title">// <span>the light and the warmth</span> · inbox</span>
+    <div class="ib-counts">
+      <span class="ib-count-pill urgent" id="unsorted-pill">0 unsorted</span>
+      <span class="ib-count-pill" id="total-pill">0 total</span>
+    </div>
+  </div>
+
+  <div class="compose">
+    <textarea id="compose-text" placeholder="dump it here — idea, world detail, dialogue, half-thought, anything..." rows="3"></textarea>
+    <div class="compose-bottom">
+      <div class="tags-row">
+        <button class="tag world" data-tag="world" onclick="toggleTag(this)">world</button>
+        <button class="tag char" data-tag="char" onclick="toggleTag(this)">character</button>
+        <button class="tag plot" data-tag="plot" onclick="toggleTag(this)">plot</button>
+        <button class="tag inspo" data-tag="inspo" onclick="toggleTag(this)">inspo</button>
+        <button class="tag res" data-tag="res" onclick="toggleTag(this)">research</button>
+        <button class="tag voice" data-tag="voice" onclick="toggleTag(this)">voice</button>
+        <button class="tag misc" data-tag="misc" onclick="toggleTag(this)">misc</button>
+      </div>
+      <div class="compose-actions">
+        <span class="hint" id="hint" style="display:none;">⌘+enter</span>
+        <button class="btn" onclick="clearCompose()">clear</button>
+        <button class="btn primary" onclick="addEntry()"><i class="ti ti-plus" aria-hidden="true"></i> dump</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib-divider"></div>
+
+  <div class="section-head">
+    <span class="section-label">// unsorted <span class="section-badge" id="unsorted-badge">0</span></span>
+    <div class="filter-row">
+      <button class="filter on" data-filter="all" onclick="setFilter(this)">all</button>
+      <button class="filter" data-filter="world" onclick="setFilter(this)">world</button>
+      <button class="filter" data-filter="char" onclick="setFilter(this)">char</button>
+      <button class="filter" data-filter="plot" onclick="setFilter(this)">plot</button>
+      <button class="filter" data-filter="inspo" onclick="setFilter(this)">inspo</button>
+      <button class="filter" data-filter="res" onclick="setFilter(this)">res</button>
+      <button class="filter" data-filter="voice" onclick="setFilter(this)">voice</button>
+      <button class="filter" data-filter="misc" onclick="setFilter(this)">misc</button>
+    </div>
+  </div>
+  <div class="entries" id="unsorted-list"></div>
+
+  <div class="ib-divider"></div>
+
+  <div class="section-head">
+    <span class="section-label">// sorted <span class="section-badge" id="sorted-badge">0</span></span>
+    <button class="ghost-btn" onclick="clearSorted()">clear sorted</button>
+  </div>
+  <div class="entries" id="sorted-list"></div>
+
+  <div class="ib-divider"></div>
+
+  <div class="scratchpad">
+    <div class="sp-head">
+      <span class="sp-label">// scratchpad — all entries</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="copied" id="copied-msg" style="display:none;">copied to clipboard</span>
+        <button class="sp-btn" onclick="copyScratchpad()"><i class="ti ti-copy" aria-hidden="true"></i> copy all</button>
+      </div>
+    </div>
+    <div class="sp-content empty" id="sp-content">// everything you dump appears here — copy all to paste into your notion scratchpad page</div>
+  </div>
+</div>
+
+<script>
+const LABELS={world:'worldbuilding',char:'character',plot:'plot',inspo:'inspiration',res:'research',voice:'voice/dialogue',misc:'misc'};
+let entries=[],selTags=[],filter='all';
+try{entries=JSON.parse(localStorage.getItem('tltw_inbox')||'[]');}catch(e){}
+function save(){try{localStorage.setItem('tltw_inbox',JSON.stringify(entries));}catch(e){}}
+function fmt(ts){const d=new Date(ts);return(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function toggleTag(btn){const t=btn.dataset.tag;if(selTags.includes(t)){selTags=selTags.filter(x=>x!==t);btn.classList.remove('on');}else{selTags.push(t);btn.classList.add('on');}}
+function setFilter(btn){filter=btn.dataset.filter;document.querySelectorAll('.filter').forEach(b=>b.classList.remove('on'));btn.classList.add('on');render();}
+function addEntry(){const text=document.getElementById('compose-text').value.trim();if(!text)return;entries.unshift({id:Date.now(),text,tags:[...selTags],sorted:false,ts:Date.now()});save();clearCompose();render();}
+function clearCompose(){document.getElementById('compose-text').value='';selTags=[];document.querySelectorAll('.tag').forEach(b=>b.classList.remove('on'));}
+function markSorted(id){const e=entries.find(e=>e.id===id);if(e){e.sorted=!e.sorted;save();render();}}
+function del(id){entries=entries.filter(e=>e.id!==id);save();render();}
+function clearSorted(){entries=entries.filter(e=>!e.sorted);save();render();}
+function buildSp(){if(!entries.length)return'';return entries.map(e=>{const tags=e.tags.length?'['+e.tags.map(t=>LABELS[t]||t).join(', ')+']':'[untagged]';return fmt(e.ts)+' '+tags+(e.sorted?' [sorted]':'')+'\n'+e.text;}).join('\n\n───\n\n');}
+function copyScratchpad(){const t=buildSp();if(!t)return;navigator.clipboard.writeText(t).then(()=>{const m=document.getElementById('copied-msg');m.style.display='inline';setTimeout(()=>{m.style.display='none';},2200);});}
+function makeEntry(e){
+  const div=document.createElement('div');div.className='entry'+(e.sorted?' sorted':'');
+  const txt=document.createElement('div');txt.className='entry-text';txt.textContent=e.text;div.appendChild(txt);
+  const foot=document.createElement('div');foot.className='entry-foot';
+  if(e.tags.length){e.tags.forEach(t=>{const s=document.createElement('span');s.className='etag '+t;s.textContent=LABELS[t]||t;foot.appendChild(s);});}
+  else{const s=document.createElement('span');s.className='etag untagged';s.textContent='untagged';foot.appendChild(s);}
+  const date=document.createElement('span');date.className='entry-date';date.textContent=fmt(e.ts);foot.appendChild(date);
+  const acts=document.createElement('div');acts.className='entry-acts';
+  const sb=document.createElement('button');sb.className='act '+(e.sorted?'undo':'check');sb.innerHTML=e.sorted?'<i class="ti ti-rotate-clockwise" aria-hidden="true"></i>':'<i class="ti ti-check" aria-hidden="true"></i>';sb.setAttribute('aria-label',e.sorted?'mark unsorted':'mark sorted');sb.onclick=()=>markSorted(e.id);acts.appendChild(sb);
+  const db=document.createElement('button');db.className='act del';db.innerHTML='<i class="ti ti-x" aria-hidden="true"></i>';db.setAttribute('aria-label','delete');db.onclick=()=>del(e.id);acts.appendChild(db);
+  foot.appendChild(acts);div.appendChild(foot);return div;
+}
+function render(){
+  const unsorted=entries.filter(e=>!e.sorted&&(filter==='all'||e.tags.includes(filter)));
+  const sorted=entries.filter(e=>e.sorted);
+  const totalUnsorted=entries.filter(e=>!e.sorted).length;
+  document.getElementById('unsorted-pill').textContent=totalUnsorted+' unsorted';
+  document.getElementById('unsorted-pill').className='ib-count-pill'+(totalUnsorted>0?' urgent':'');
+  document.getElementById('total-pill').textContent=entries.length+' total';
+  document.getElementById('unsorted-badge').textContent=unsorted.length;
+  document.getElementById('sorted-badge').textContent=sorted.length;
+  const ul=document.getElementById('unsorted-list');ul.innerHTML='';
+  if(!unsorted.length){const e=document.createElement('div');e.className='empty';e.textContent=filter==='all'?'// inbox clear':'// no '+filter+' entries yet';ul.appendChild(e);}
+  else{unsorted.forEach(e=>ul.appendChild(makeEntry(e)));}
+  const sl=document.getElementById('sorted-list');sl.innerHTML='';
+  if(!sorted.length){const e=document.createElement('div');e.className='empty';e.textContent='// nothing sorted yet';sl.appendChild(e);}
+  else{sorted.forEach(e=>sl.appendChild(makeEntry(e)));}
+  const sp=document.getElementById('sp-content');const spText=buildSp();
+  if(!spText){sp.className='sp-content empty';sp.textContent='// everything you dump appears here — copy all to paste into your notion scratchpad page';}
+  else{sp.className='sp-content';sp.textContent=spText;}
+}
+document.getElementById('compose-text').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)){e.preventDefault();addEntry();}});
+document.getElementById('compose-text').addEventListener('focus',()=>{document.getElementById('hint').style.display='inline';});
+document.getElementById('compose-text').addEventListener('blur',()=>{document.getElementById('hint').style.display='none';});
+render();
+</script>
