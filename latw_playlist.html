@@ -1,0 +1,250 @@
+
+<h2 class="sr-only">The Light and the Warmth story playlist — a scrollable, editable list of songs organised by story act, with controls to add and remove tracks.</h2>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.pw{background:#060608;min-height:520px;display:flex;flex-direction:column;font-family:Georgia,serif;border:1px solid #1a1a28}
+.ph{padding:14px 18px 10px;border-bottom:1px solid #1a1a28;flex-shrink:0}
+.ph-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px}
+.ph-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;color:#1a1a35;margin-bottom:5px}
+.ph-title{font-family:'Share Tech Mono',monospace;font-size:15px;letter-spacing:3px;color:#ff00aa}
+.ph-sub{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:#336600;margin-top:2px}
+.btn-add{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;padding:6px 13px;cursor:pointer;transition:all 0.15s;border-radius:0}
+.btn-add.off{background:transparent;color:#cc0077;border:1px solid #cc0077}
+.btn-add.off:hover{background:#cc0077;color:#fff}
+.btn-add.on{background:#330033;color:#ff00aa;border:1px solid #ff00aa}
+.add-form{background:#08060e;border-bottom:1px solid #330033;padding:14px 18px;flex-shrink:0}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.form-full{margin-bottom:8px}
+.fl{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:#4a2a4a;margin-bottom:4px}
+.fi{width:100%;background:#060608;border:1px solid #1a1a28;color:#c4cad4;font-family:'Share Tech Mono',monospace;font-size:11px;padding:7px 9px;outline:none}
+.fi:focus{border-color:#660033}
+.fi-note{font-family:Georgia,serif;font-style:italic;font-size:12px}
+.tags-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.tag-btn{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1px;padding:3px 9px;cursor:pointer;border:1px solid #1a1a28;background:transparent;color:#3a3a5a;transition:all 0.12s;border-radius:0}
+.btn-save{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;background:#66cc00;color:#060608;border:none;padding:8px 18px;cursor:pointer}
+.btn-save:disabled{opacity:0.35;cursor:not-allowed}
+.filters{display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid #1a1a28;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.fb{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;padding:8px 12px;cursor:pointer;white-space:nowrap;border:none;background:transparent;color:#2a2a45;border-bottom:2px solid transparent;transition:all 0.12s}
+.song-list{overflow-y:auto;flex:1}
+.song-item{display:flex;align-items:flex-start;gap:12px;padding:10px 18px;border-bottom:1px solid #10101a;transition:background 0.1s;cursor:default}
+.song-item:hover{background:#0a0a12}
+.song-num{font-family:'Share Tech Mono',monospace;font-size:10px;color:#1a1a30;min-width:22px;text-align:right;padding-top:2px;flex-shrink:0}
+.song-body{flex:1;min-width:0}
+.song-title{font-size:13px;color:#c4cad4;line-height:1.35;margin-bottom:2px}
+.song-artist{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff00aa;margin-bottom:0;letter-spacing:0.5px}
+.song-note{font-size:11.5px;color:#3a4a5a;font-style:italic;line-height:1.6;margin-top:4px}
+.song-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.tag-pill{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:1px;padding:2px 7px;border:1px solid;white-space:nowrap}
+.del-btn{font-family:'Share Tech Mono',monospace;font-size:8px;background:transparent;border:none;color:#1a1a30;cursor:pointer;padding:2px 4px}
+.del-btn:hover{color:#cc0077}
+.del-confirm{display:flex;gap:4px}
+.btn-yes{font-family:'Share Tech Mono',monospace;font-size:7px;background:#cc0077;color:#fff;border:none;padding:2px 8px;cursor:pointer}
+.btn-no{font-family:'Share Tech Mono',monospace;font-size:7px;background:transparent;color:#3a3a5a;border:1px solid #1a1a28;padding:2px 8px;cursor:pointer}
+.empty{text-align:center;padding:40px;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;color:#1a1a30}
+.pf{border-top:1px solid #1a1a28;padding:7px 18px;display:flex;justify-content:space-between;flex-shrink:0}
+.pf-txt{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:2px;color:#0d0d18}
+</style>
+
+<div class="pw" id="pw">
+  <div class="ph">
+    <div class="ph-label">the light and the warmth // neo seoul 2286</div>
+    <div class="ph-top">
+      <div>
+        <div class="ph-title">STORY PLAYLIST</div>
+        <div class="ph-sub" id="ph-sub">loading...</div>
+      </div>
+      <button class="btn-add off" id="btn-add" onclick="toggleForm()">+ ADD TRACK</button>
+    </div>
+  </div>
+
+  <div class="add-form" id="add-form" style="display:none">
+    <div class="fl" style="color:#ff00aa;letter-spacing:3px;margin-bottom:10px">NEW TRACK</div>
+    <div class="form-row">
+      <div><div class="fl">TITLE *</div><input class="fi" id="f-title" placeholder="Song title"></div>
+      <div><div class="fl">ARTIST *</div><input class="fi" id="f-artist" placeholder="Artist name"></div>
+    </div>
+    <div class="form-full">
+      <div class="fl">NOTE (OPTIONAL)</div>
+      <input class="fi fi-note" id="f-note" placeholder="When does this play? What does it mean?">
+    </div>
+    <div class="fl">TAG</div>
+    <div class="tags-row" id="tag-picker"></div>
+    <button class="btn-save" id="btn-save" onclick="addSong()" disabled>SAVE TRACK</button>
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div class="song-list" id="song-list"></div>
+
+  <div class="pf">
+    <div class="pf-txt">JOHWA SYSTEMS // UNAUTHORIZED SIGNAL</div>
+    <div class="pf-txt">NEO SEOUL 2286</div>
+  </div>
+</div>
+
+<script>
+const KEY = 'latw-playlist-v2';
+
+const TAGS = [
+  {id:'fragment', label:'FRAGMENT', color:'#ff00aa', border:'#660044'},
+  {id:'act1', label:'ACT I — SIGNAL', color:'#4db8ff', border:'#1a3a60'},
+  {id:'act2', label:'ACT II — REHABILITATION', color:'#d4883a', border:'#3a2010'},
+  {id:'act3', label:'ACT III — ESCAPE', color:'#66cc00', border:'#2a5010'},
+  {id:'character', label:'CHARACTER', color:'#9a6aff', border:'#3a1a6a'},
+  {id:'theme', label:'THEME', color:'#4a9aaa', border:'#1a3a4a'},
+  {id:'other', label:'OTHER', color:'#4a4a6a', border:'#1a1a2a'},
+];
+
+const TAG_SHORT = {fragment:'FRAGMENT',act1:'ACT I',act2:'ACT II',act3:'ACT III',character:'CHAR',theme:'THEME',other:'OTHER'};
+
+const INIT = [
+  {id:'s001',title:'Before Our Spring (우리의 봄이 오기 전에)',artist:'Jonghyun',note:'The forty-three second fragment. The thing that starts everything.',tag:'fragment'},
+  {id:'s002',title:'World Alone',artist:'Lorde',note:'The white from inside it.',tag:'act1'},
+  {id:'s003',title:'Jigsaw Falling Into Place',artist:'Radiohead',note:'A city that moves around you without touching you.',tag:'act1'},
+  {id:'s004',title:'Motion Picture Soundtrack',artist:'Radiohead',note:'What the white sounds like from inside.',tag:'act1'},
+  {id:'s005',title:'Future Club',artist:'Perturbator',note:'The Underbelly neon at 3am. Nothing wrong and nothing right.',tag:'act1'},
+  {id:'s006',title:'New Flesh',artist:'Current Value',note:"The city's mechanical rhythm. The mechs on their 14-second intervals.",tag:'act1'},
+  {id:'s007',title:'Shadow',artist:'Chromatics',note:'The drag — the pull toward something you cannot name, running beneath everything.',tag:'act2'},
+  {id:'s008',title:'Retrograde',artist:'James Blake',note:'K arriving early to the studio without having decided to.',tag:'act2'},
+  {id:'s009',title:'Two Weeks',artist:'FKA twigs',note:'Desire arriving in a body that does not have a word for it.',tag:'act2'},
+  {id:'s010',title:'In the Air Tonight',artist:'Phil Collins',note:'Something is building. It has been building. The chip cannot catch it.',tag:'act2'},
+  {id:'s011',title:'Dissolved Girl',artist:'Massive Attack',note:'Mid-session. The adjustment. Something below the threshold of logging.',tag:'act2'},
+  {id:'s012',title:'Teardrop',artist:'Massive Attack',note:'The studio. The mat. Two people in the same room not yet knowing.',tag:'act2'},
+  {id:'s013',title:'Closer',artist:'Nine Inch Nails',note:'A body understanding something before the mind does.',tag:'act2'},
+  {id:'s014',title:'cellophane',artist:'FKA twigs',note:'The restroom. Ch. 16. The 3.8 seconds. Category Omega declared.',tag:'act2'},
+  {id:'s015',title:'Strange',artist:'Celeste',note:'The mirror. Both hands on the basin. Sixty-one seconds. Not moving.',tag:'act2'},
+  {id:'s016',title:'How to Disappear Completely',artist:'Radiohead',note:"Emergency suppression cycling. K holding himself together for 22 more minutes.",tag:'act2'},
+  {id:'s017',title:'Tears',artist:'HEALTH',note:'Category Omega. The automated report. The Bureau moving.',tag:'act2'},
+  {id:'s018',title:'If I Had a Heart',artist:'Fever Ray',note:'The below-plate community. The signal-safe spaces. The keepers.',tag:'act2'},
+  {id:'s019',title:'Archangel',artist:'Burial',note:'The descent into Old Seoul. The dead zone. The chip going quiet.',tag:'act2'},
+  {id:'s020',title:'Holocene',artist:'Bon Iver',note:'K in the archive. Reading testimony. Recognizing himself in words written 260 years ago.',tag:'act2'},
+  {id:'s021',title:'Night Owl',artist:'Galimatias ft. Gallant',note:'The warm. Found.',tag:'act2'},
+  {id:'s022',title:'Saturn',artist:'Stevie Wonder',note:"L's apartment. The balcony. K seeing the city from the middle for the first time.",tag:'act2'},
+  {id:'s023',title:"Lover's Spit",artist:'Broken Social Scene',note:'The love scene. Specifically and exactly.',tag:'act2'},
+  {id:'s024',title:'Re: Stacks',artist:'Bon Iver',note:"The silence after. K awake in L's apartment. The chip at 14%.",tag:'act2'},
+  {id:'s025',title:'The Night Will Always Win',artist:'Manchester Orchestra',note:'Real, and knowing it cannot last indefinitely, and choosing it anyway.',tag:'act2'},
+  {id:'s026',title:'Dangerous',artist:'Carpenter Brut & Zola Jesus',note:'The escape. The scrapper tunnels. The chips dropping.',tag:'act3'},
+  {id:'s027',title:'Run',artist:'HEALTH',note:"The chase. K's lung capacity augmentation doing its work.",tag:'act3'},
+  {id:'s028',title:'The Greater Good',artist:'Nine Inch Nails',note:"Broadcast preparation. Taemin at the transmitter. Minho's final report.",tag:'act3'},
+  {id:'s029',title:'Immigrant Song',artist:'Led Zeppelin',note:'Eleven seconds. Every relay node simultaneously. The music going out.',tag:'act3'},
+  {id:'s030',title:'Power',artist:'Kanye West',note:'The still, city-wide. Millions of chips logging a 0.3-second lag at once.',tag:'act3'},
+  {id:'s031',title:'We Are the People',artist:'Empire of the Sun',note:'The crack in the white. Not triumphant yet. Just: present. Just: real.',tag:'act3'},
+  {id:'s032',title:'Death With Dignity',artist:'Sufjan Stevens',note:"Saying something true out loud for the first time. 사랑해.",tag:'act3'},
+  {id:'s033',title:'First Breath After Coma',artist:'Explosions in the Sky',note:'The ending. K and L, named, in actual air. The signal still going out.',tag:'act3'},
+];
+
+let songs = [];
+let filter = 'all';
+let formTag = 'other';
+let delConfirm = null;
+let adding = false;
+
+function tagStyle(id){return TAGS.find(t=>t.id===id)||TAGS[TAGS.length-1];}
+
+function renderFilters(){
+  const el = document.getElementById('filters');
+  const all = [{id:'all',label:'ALL',color:'#ff00aa',border:'#660044'},...TAGS];
+  el.innerHTML = all.map(t=>{
+    const count = t.id==='all'?songs.length:songs.filter(s=>s.tag===t.id).length;
+    const active = filter===t.id;
+    return `<button class="fb" onclick="setFilter('${t.id}')" style="color:${active?t.color:'#2a2a45'};border-bottom:2px solid ${active?t.color:'transparent'}">${t.label.split(' — ')[0]} <span style="opacity:0.45">(${count})</span></button>`;
+  }).join('');
+}
+
+function renderList(){
+  const el = document.getElementById('song-list');
+  const sub = document.getElementById('ph-sub');
+  const list = filter==='all'?songs:songs.filter(s=>s.tag===filter);
+  sub.textContent = `${songs.length} tracks // ${list.length} shown`;
+  if(!list.length){el.innerHTML='<div class="empty">NO TRACKS IN THIS SECTION</div>';return;}
+  el.innerHTML = list.map((s,i)=>{
+    const ts = tagStyle(s.tag);
+    const isDel = delConfirm===s.id;
+    return `<div class="song-item" style="background:${isDel?'#1a0008':'transparent'}">
+      <div class="song-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="song-body">
+        <div class="song-title">${s.title}</div>
+        <div class="song-artist">${s.artist}</div>
+        ${s.note?`<div class="song-note">${s.note}</div>`:''}
+      </div>
+      <div class="song-right">
+        <div class="tag-pill" style="color:${ts.color};border-color:${ts.border}">${TAG_SHORT[s.tag]||'OTHER'}</div>
+        ${isDel
+          ?`<div class="del-confirm"><button class="btn-yes" onclick="doDelete('${s.id}')">DELETE</button><button class="btn-no" onclick="cancelDel()">KEEP</button></div>`
+          :`<button class="del-btn" onclick="confirmDel('${s.id}')">✕</button>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTagPicker(){
+  const el = document.getElementById('tag-picker');
+  el.innerHTML = TAGS.map(t=>{
+    const active = formTag===t.id;
+    return `<button class="tag-btn" onclick="setFormTag('${t.id}')" style="color:${active?t.color:'#3a3a5a'};border-color:${active?t.color:'#1a1a28'};background:${active?t.border+'88':'transparent'}">${t.label}</button>`;
+  }).join('');
+}
+
+function setFilter(id){filter=id;renderFilters();renderList();}
+function confirmDel(id){delConfirm=id;renderList();}
+function cancelDel(){delConfirm=null;renderList();}
+function setFormTag(id){formTag=id;renderTagPicker();}
+
+function toggleForm(){
+  adding=!adding;
+  const f=document.getElementById('add-form');
+  const b=document.getElementById('btn-add');
+  f.style.display=adding?'block':'none';
+  b.className='btn-add '+(adding?'on':'off');
+  b.textContent=adding?'✕ CANCEL':'+ ADD TRACK';
+  if(adding){renderTagPicker();checkForm();}
+}
+
+function checkForm(){
+  const t=document.getElementById('f-title').value.trim();
+  const a=document.getElementById('f-artist').value.trim();
+  document.getElementById('btn-save').disabled=!(t&&a);
+}
+
+document.getElementById('f-title').oninput=checkForm;
+document.getElementById('f-artist').oninput=checkForm;
+
+async function doDelete(id){
+  songs=songs.filter(s=>s.id!==id);
+  delConfirm=null;
+  await persist();
+  renderFilters();renderList();
+}
+
+async function addSong(){
+  const title=document.getElementById('f-title').value.trim();
+  const artist=document.getElementById('f-artist').value.trim();
+  const note=document.getElementById('f-note').value.trim();
+  if(!title||!artist)return;
+  songs.push({id:'u'+Date.now(),title,artist,note,tag:formTag});
+  await persist();
+  document.getElementById('f-title').value='';
+  document.getElementById('f-artist').value='';
+  document.getElementById('f-note').value='';
+  formTag='other';
+  toggleForm();
+  renderFilters();renderList();
+}
+
+async function persist(){
+  try{await window.storage.set(KEY,JSON.stringify(songs));}catch(e){}
+}
+
+async function init(){
+  try{
+    const r=await window.storage.get(KEY);
+    songs=r&&r.value?JSON.parse(r.value):INIT;
+    if(!r||!r.value)await persist();
+  }catch(e){songs=INIT;}
+  renderFilters();renderList();
+}
+
+init();
+</script>
