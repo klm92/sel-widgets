@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>the light and the warmth — writing tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0e;
+    --surface: #131320;
+    --surface2: #1a1a2e;
+    --border: #2a2545;
+    --border2: #36305a;
+    --purple: #ff2d78;
+    --purple-dim: #cc1a5e;
+    --purple-dark: #4a0020;
+    --teal: #00ff9f;
+    --teal-dim: #00cc7a;
+    --pink: #ff2d78;
+    --pink-dim: #cc1a5e;
+    --amber: #EF9F27;
+    --amber-dim: #854F0B;
+    --red: #E24B4A;
+    --text: #ffffff;
+    --text-mid: #dcdaf5;
+    --text-dim: #b0a8d0;
+    --text-faint: #6a6090;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .page { max-width: 860px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  .header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 0.5px solid var(--border); }
+  .header-eyebrow { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 6px; }
+  .header-title { font-size: 28px; font-weight: 600; color: var(--text); letter-spacing: 1px; margin-bottom: 4px; }
+  .header-sub { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
+  .header-stripe { height: 2px; background: linear-gradient(90deg, var(--teal), var(--purple), var(--teal)); border-radius: 99px; margin-bottom: 20px; }
+
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 24px; }
+  .metric { background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .metric-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px; }
+  .metric-val { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 3px; }
+  .metric-sub { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-faint); }
+
+  .progress-wrap { margin-bottom: 24px; }
+  .progress-label { display: flex; justify-content: space-between; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 1px; }
+  .bar-outer { height: 8px; background: var(--surface); border: 0.5px solid var(--border2); border-radius: 99px; overflow: hidden; }
+  .bar-inner { height: 100%; border-radius: 99px; background: var(--purple); transition: width 0.5s ease; }
+
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-bottom: 28px; }
+  .phase { background: var(--surface); border: 0.5px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .phase.active { border-color: var(--purple); }
+  .phase.done { border-color: var(--teal); }
+  .phase-name { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
+  .phase-dates { font-size: 11px; color: var(--text-mid); margin-bottom: 8px; }
+  .phase-bar-outer { height: 4px; background: var(--border2); border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+  .phase-bar-inner { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+  .phase-desc { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-faint); }
+
+  .section { margin-bottom: 28px; }
+  .section-head { font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-head::after { content: ''; flex: 1; height: 0.5px; background: var(--border); }
+
+  .log-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .log-form label { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 1px; display: block; margin-bottom: 4px; }
+  .log-form input[type="date"],
+  .log-form input[type="number"],
+  .log-form select {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+    height: 38px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .log-form input[type="date"]:focus,
+  .log-form input[type="number"]:focus,
+  .log-form select:focus { border-color: var(--purple); }
+  .log-form input[type="number"] { width: 130px; }
+  .log-form input[type="date"] { width: 150px; }
+  .log-form select { width: 130px; }
+  .log-form select option { background: var(--surface); }
+
+  .btn { height: 38px; padding: 0 18px; border: 0.5px solid var(--border2); border-radius: 6px; background: transparent; color: var(--text-mid); font-family: 'Share Tech Mono', monospace; font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { border-color: var(--purple); color: var(--text); background: rgba(127,119,221,0.08); }
+  .btn.danger:hover { border-color: var(--red); color: var(--red); background: rgba(226,75,74,0.06); }
+  .btn i { font-size: 15px; }
+
+  .entries { border: 0.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .entry { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 0.5px solid var(--border); font-size: 13px; transition: background 0.15s; }
+  .entry:last-child { border-bottom: none; }
+  .entry:hover { background: var(--surface2); }
+  .entry-date { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-mid); min-width: 96px; }
+  .entry-type { font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 3px 10px; border-radius: 99px; min-width: 72px; text-align: center; letter-spacing: 1px; }
+  .type-off { background: rgba(127,119,221,0.12); color: var(--purple); border: 0.5px solid rgba(127,119,221,0.25); }
+  .type-work { background: rgba(29,158,117,0.12); color: var(--teal); border: 0.5px solid rgba(29,158,117,0.25); }
+  .entry-words { font-weight: 600; color: var(--text); margin-left: auto; font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+  .entry-del { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 16px; padding: 2px 4px; line-height: 1; transition: color 0.2s; }
+  .entry-del:hover { color: var(--red); }
+  .entries-empty { padding: 24px; text-align: center; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-faint); letter-spacing: 1px; }
+
+  .weekly-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .weekly-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-mid); min-width: 64px; }
+  .weekly-bar-outer { flex: 1; height: 6px; background: var(--surface); border-radius: 99px; overflow: hidden; position: relative; border: 0.5px solid var(--border); }
+  .weekly-bar-inner { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+  .weekly-goal-marker { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--red); opacity: 0.45; }
+  .weekly-val { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-mid); min-width: 72px; text-align: right; }
+
+  .streak-keys { display: flex; gap: 16px; margin-bottom: 10px; }
+  .streak-key { display: flex; align-items: center; gap: 6px; font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--text-dim); }
+  .streak-key-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .streak-grid { display: flex; flex-wrap: wrap; gap: 3px; }
+  .day-dot { width: 13px; height: 13px; border-radius: 3px; background: var(--surface); border: 0.5px solid var(--border); cursor: default; transition: transform 0.1s; }
+  .day-dot:hover { transform: scale(1.3); }
+  .day-dot.wrote { background: var(--purple); border-color: var(--purple-dim); }
+  .day-dot.wrote.work { background: var(--teal); border-color: var(--teal-dim); }
+  .day-dot.today { box-shadow: 0 0 0 1.5px var(--amber); }
+
+  .empty-weekly { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-faint); letter-spacing: 1px; }
+
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.4); cursor: pointer; }
+
+  @media (max-width: 600px) {
+    .page { padding: 20px 14px 48px; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .phases { grid-template-columns: repeat(2, 1fr); }
+    .log-form { flex-direction: column; align-items: stretch; }
+    .log-form input, .log-form select, .btn { width: 100% !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header-stripe"></div>
+
+  <div class="header">
+    <div class="header-eyebrow">// writing tracker · shinee fic fest 2026</div>
+    <div class="header-title">the light and the warmth</div>
+    <div class="header-sub">june 13 → september 5, 2026 &nbsp;·&nbsp; target: 150,000 words &nbsp;·&nbsp; buffer: sept 13</div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">total written</div>
+      <div class="metric-val" id="m-total">0</div>
+      <div class="metric-sub">of 150,000</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">remaining</div>
+      <div class="metric-val" id="m-remain">150,000</div>
+      <div class="metric-sub">words to go</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">this week</div>
+      <div class="metric-val" id="m-week">0</div>
+      <div class="metric-sub">of ~11,500 target</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">daily avg</div>
+      <div class="metric-val" id="m-avg">—</div>
+      <div class="metric-sub">words / writing day</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">days logged</div>
+      <div class="metric-val" id="m-days">0</div>
+      <div class="metric-sub">writing days</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">on track</div>
+      <div class="metric-val" id="m-track" style="font-size:16px; padding-top:4px;">—</div>
+      <div class="metric-sub" id="m-track-sub">log entries to see</div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>// overall progress</span>
+      <span id="pct-label">0%</span>
+    </div>
+    <div class="bar-outer">
+      <div class="bar-inner" id="main-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="phases" id="phases-container"></div>
+
+  <div class="section">
+    <div class="section-head">log a writing day</div>
+    <div class="log-form">
+      <div>
+        <label>date</label>
+        <input type="date" id="log-date">
+      </div>
+      <div>
+        <label>words written</label>
+        <input type="number" id="log-words" placeholder="e.g. 2500" min="0">
+      </div>
+      <div>
+        <label>day type</label>
+        <select id="log-type">
+          <option value="off">day off</option>
+          <option value="work">work day</option>
+        </select>
+      </div>
+      <div style="padding-top:18px;">
+        <button class="btn" onclick="addEntry()"><i class="ti ti-plus" aria-hidden="true"></i> add entry</button>
+      </div>
+      <div style="padding-top:18px;">
+        <button class="btn danger" onclick="clearAll()"><i class="ti ti-trash" aria-hidden="true"></i> clear all</button>
+      </div>
+    </div>
+    <div class="entries" id="entries-list">
+      <div class="entries-empty">// no entries yet — log your first writing day above</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">weekly breakdown</div>
+    <div id="weekly-bars"><div class="empty-weekly">// log entries to see weekly breakdown</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">writing streak — june 13 to sept 5</div>
+    <div class="streak-keys">
+      <span class="streak-key"><span class="streak-key-dot" style="background:var(--purple);"></span> day off</span>
+      <span class="streak-key"><span class="streak-key-dot" style="background:var(--teal);"></span> work day</span>
+      <span class="streak-key"><span class="streak-key-dot" style="background:var(--surface); border:0.5px solid var(--border);"></span> no entry</span>
+      <span class="streak-key"><span class="streak-key-dot" style="background:var(--surface); border:0.5px solid var(--border); box-shadow:0 0 0 1.5px var(--amber);"></span> today</span>
+    </div>
+    <div class="streak-grid" id="streak-dots"></div>
+  </div>
+
+</div>
+
+<script>
+const GOAL = 150000;
+const WEEK_GOAL = 11500;
+const FEST_START = '2026-06-13';
+const FEST_END = '2026-09-05';
+
+const PHASES = [
+  { name: 'prep', dates: 'june 3 – 12', target: 0, cumTarget: 0, color: '#b0a8d0', desc: 'outline & worldbuild' },
+  { name: 'phase 1', dates: 'june 13 – july 11', target: 46000, cumTarget: 46000, color: '#ff2d78', desc: 'foundation' },
+  { name: 'phase 2', dates: 'july 12 – aug 8', target: 46000, cumTarget: 92000, color: '#ff2d78', desc: 'momentum' },
+  { name: 'phase 3', dates: 'aug 9 – sept 5', target: 58000, cumTarget: 150000, color: '#00ff9f', desc: 'the finish' },
+];
+
+let entries = [];
+try { entries = JSON.parse(localStorage.getItem('tltw_entries') || '[]'); } catch(e) {}
+
+function save() { try { localStorage.setItem('tltw_entries', JSON.stringify(entries)); } catch(e) {} }
+function fmt(n) { return Math.round(n).toLocaleString(); }
+
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d); mon.setDate(diff);
+  return mon.toISOString().slice(0,10);
+}
+
+function render() {
+  const total = entries.reduce((s, e) => s + e.words, 0);
+  const remain = Math.max(0, GOAL - total);
+  const pct = Math.min(100, Math.round((total / GOAL) * 100));
+  const writingDays = entries.filter(e => e.words > 0).length;
+  const avg = writingDays > 0 ? Math.round(total / writingDays) : 0;
+
+  document.getElementById('m-total').textContent = fmt(total);
+  document.getElementById('m-remain').textContent = fmt(remain);
+  document.getElementById('m-days').textContent = writingDays;
+  document.getElementById('m-avg').textContent = writingDays > 0 ? fmt(avg) : '—';
+  document.getElementById('pct-label').textContent = pct + '%';
+  document.getElementById('main-bar').style.width = pct + '%';
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const weekStart = getWeekKey(todayStr);
+  const weekTotal = entries.filter(e => getWeekKey(e.date) === weekStart).reduce((s,e) => s + e.words, 0);
+  document.getElementById('m-week').textContent = fmt(weekTotal);
+
+  const trackEl = document.getElementById('m-track');
+  const trackSub = document.getElementById('m-track-sub');
+  if (writingDays === 0) {
+    trackEl.textContent = '—'; trackEl.style.color = '';
+    trackSub.textContent = 'log entries to see';
+  } else {
+    const festStartD = new Date(FEST_START + 'T12:00:00');
+    const today = new Date();
+    const daysSinceFest = Math.max(1, Math.round((today - festStartD) / 86400000));
+    const expected = Math.round((GOAL / 84) * Math.min(daysSinceFest, 84));
+    if (today < festStartD) {
+      trackEl.textContent = 'prep'; trackEl.style.color = '#b0a8d0';
+      trackSub.textContent = 'fest starts june 13';
+    } else if (total >= expected) {
+      trackEl.textContent = 'yes ↗'; trackEl.style.color = '#00ff9f';
+      trackSub.textContent = '+' + fmt(total - expected) + ' ahead';
+    } else {
+      trackEl.textContent = 'behind'; trackEl.style.color = '#ff6b6b';
+      trackSub.textContent = fmt(expected - total) + ' behind pace';
+    }
+  }
+
+  const pc = document.getElementById('phases-container');
+  pc.innerHTML = '';
+  PHASES.forEach((p, i) => {
+    const div = document.createElement('div');
+    const phaseWords = i === 0 ? 0 :
+      i === 1 ? Math.min(total, 46000) :
+      i === 2 ? Math.max(0, Math.min(total - 46000, 46000)) :
+                Math.max(0, total - 92000);
+    const phasePct = i === 0 ? 0 : Math.min(100, Math.round((phaseWords / p.target) * 100));
+    const isDone = i > 0 && total >= p.cumTarget;
+    const isActive = i > 0 && !isDone && total >= (PHASES[i-1].cumTarget);
+    div.className = 'phase' + (isActive ? ' active' : '') + (isDone ? ' done' : '');
+    div.innerHTML = `
+      <div class="phase-name">${p.name}</div>
+      <div class="phase-dates">${p.dates}</div>
+      <div class="phase-bar-outer">
+        <div class="phase-bar-inner" style="width:${phasePct}%; background:${p.color};"></div>
+      </div>
+      <div class="phase-desc">${i === 0 ? p.desc : phasePct + '% · ' + p.desc}</div>`;
+    pc.appendChild(div);
+  });
+
+  const list = document.getElementById('entries-list');
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="entries-empty">// no entries yet — log your first writing day above</div>';
+  } else {
+    const sorted = [...entries].sort((a,b) => b.date.localeCompare(a.date));
+    list.innerHTML = sorted.map(e => {
+      const realIdx = entries.findIndex(x => x.date === e.date && x.words === e.words && x.type === e.type);
+      return `<div class="entry">
+        <span class="entry-date">${e.date}</span>
+        <span class="entry-type ${e.type === 'work' ? 'type-work' : 'type-off'}">${e.type === 'work' ? 'work day' : 'day off'}</span>
+        <span class="entry-words">${fmt(e.words)} words</span>
+        <button class="entry-del" onclick="deleteEntry(${realIdx})" aria-label="delete entry"><i class="ti ti-x" aria-hidden="true"></i></button>
+      </div>`;
+    }).join('');
+  }
+
+  const weekMap = {};
+  entries.forEach(e => { const wk = getWeekKey(e.date); weekMap[wk] = (weekMap[wk] || 0) + e.words; });
+  const weeks = Object.keys(weekMap).sort();
+  const weekContainer = document.getElementById('weekly-bars');
+  if (weeks.length === 0) {
+    weekContainer.innerHTML = '<div class="empty-weekly">// log entries to see weekly breakdown</div>';
+  } else {
+    const maxW = Math.max(...Object.values(weekMap), WEEK_GOAL);
+    weekContainer.innerHTML = weeks.map(wk => {
+      const val = weekMap[wk];
+      const barPct = Math.round((val / maxW) * 100);
+      const goalPct = Math.round((WEEK_GOAL / maxW) * 100);
+      const d = new Date(wk + 'T12:00:00');
+      const label = 'wk ' + (d.getMonth()+1) + '/' + String(d.getDate()).padStart(2,'0');
+      const color = val >= WEEK_GOAL ? '#00ff9f' : '#ff2d78';
+      return `<div class="weekly-row">
+        <span class="weekly-label">${label}</span>
+        <div class="weekly-bar-outer">
+          <div class="weekly-bar-inner" style="width:${barPct}%; background:${color};"></div>
+          <div class="weekly-goal-marker" style="left:${goalPct}%;"></div>
+        </div>
+        <span class="weekly-val">${fmt(val)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const festStartD = new Date(FEST_START + 'T12:00:00');
+  const festEndD = new Date(FEST_END + 'T12:00:00');
+  const totalDays = Math.round((festEndD - festStartD) / 86400000) + 1;
+  const entryMap = {};
+  entries.forEach(e => entryMap[e.date] = e);
+  const today2 = new Date().toISOString().slice(0,10);
+
+  let dotsHtml = '';
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(festStartD); d.setDate(d.getDate() + i);
+    const ds = d.toISOString().slice(0,10);
+    const entry = entryMap[ds];
+    const isToday = ds === today2;
+    const classes = ['day-dot', entry ? 'wrote' : '', entry?.type === 'work' ? 'work' : '', isToday ? 'today' : ''].filter(Boolean).join(' ');
+    const tip = entry ? `${ds} · ${fmt(entry.words)} words` : ds;
+    dotsHtml += `<div class="${classes}" title="${tip}"></div>`;
+  }
+  document.getElementById('streak-dots').innerHTML = dotsHtml;
+}
+
+function addEntry() {
+  const date = document.getElementById('log-date').value;
+  const words = parseInt(document.getElementById('log-words').value) || 0;
+  const type = document.getElementById('log-type').value;
+  if (!date) { alert('please enter a date'); return; }
+  const existing = entries.findIndex(e => e.date === date);
+  if (existing >= 0) { entries[existing].words += words; entries[existing].type = type; }
+  else { entries.push({ date, words, type }); }
+  entries.sort((a,b) => a.date.localeCompare(b.date));
+  document.getElementById('log-words').value = '';
+  save(); render();
+}
+
+function deleteEntry(i) {
+  if (confirm('delete this entry?')) { entries.splice(i, 1); save(); render(); }
+}
+
+function clearAll() {
+  if (confirm('clear all entries? this cannot be undone.')) { entries = []; save(); render(); }
+}
+
+document.getElementById('log-date').value = new Date().toISOString().slice(0,10);
+render();
+</script>
+</body>
+</html>
